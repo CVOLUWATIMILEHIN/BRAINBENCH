@@ -1,0 +1,6 @@
+{
+  "name": "Brainbench Technology — 2026 Course Catalogue",
+  "description": "Interactive 2026 course catalogue, price list, and 20-page A4 brochure edition for Brainbench Technology across Web Development, Design, Data, Professional, and Advanced Technology programmes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
