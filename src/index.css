@@ -11,7 +11,13 @@
     --font-display: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
     --font-serif: 'Merriweather', Georgia, serif;
     --font-mono: 'JetBrains Mono', monospace;
-    --header-height: 76px;
+    --header-height: 72px;
+  }
+
+  @media (min-width: 640px) {
+    :root {
+      --header-height: 76px;
+    }
   }
 
   html {
@@ -63,6 +69,58 @@
   font-variant-numeric: tabular-nums;
 }
 
+.hero-fullscreen-stage {
+  position: relative;
+  width: 100%;
+  height: calc(100vh - var(--header-height, 76px));
+  height: calc(100svh - var(--header-height, 76px));
+  min-height: 600px;
+  overflow: hidden;
+}
+
+.hero-slide-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  z-index: 0;
+}
+
+.hero-slide-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.hero-slide-content {
+  position: relative;
+  z-index: 2;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes heroProgress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
 @media print {
   .no-print {
     display: none !important;
@@ -77,3 +135,4 @@
     background: #ffffff !important;
   }
 }
+

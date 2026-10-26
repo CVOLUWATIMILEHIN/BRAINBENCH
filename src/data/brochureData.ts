@@ -102,7 +102,7 @@ export const ABOUT_DATA = {
   heading: "About Brainbench Technology",
   whoWeAreTitle: "Who we are",
   whoWeAreBody: "Brainbench Technology equips individuals and organisations with practical, in-demand skills across technology, design, data, and professional development. Our hands-on training programmes are designed by industry practitioners and built for real-world results — from foundational courses to advanced, career-ready specialisations.",
-  aboutPhotoUrl: "/images/figma/1f2b9b58.jpg",
+  aboutPhotoUrl: "/images/figma/1f2b9b58-clean.jpg",
   pageNumber: "01"
 };
 
@@ -163,7 +163,7 @@ export const GALLERY_PAGE_19 = {
       height: 240,
       items: [
         { id: "p16", label: "PHOTO 16", width: 235, height: 240, border: "#f58220", bg: "#ffe8cc", imageUrl: "/images/figma/6e0f6042.jpg", flipX: true, caption: "Frontend Architecture Workshop" },
-        { id: "p17", label: "PHOTO 17", width: 467, height: 240, border: "#174da8", bg: "#f2f2f7", imageUrl: "/images/figma/1f2b9b58.jpg", caption: "Brainbench Technology Ado-Ekiti Campus" }
+        { id: "p17", label: "PHOTO 17", width: 467, height: 240, border: "#174da8", bg: "#f2f2f7", imageUrl: "/images/figma/1f2b9b58-clean.jpg", caption: "Brainbench Technology Ado-Ekiti Campus" }
       ]
     },
     {
@@ -313,7 +313,7 @@ export const COURSE_PAGES: CoursePageData[] = [
         "bg": "#ffffff",
         "photoPos": "right",
         "photoWidth": 290,
-        "imageUrl": "/images/figma/210ae02d.jpg",
+        "imageUrl": "/images/figma/210ae02d-clean.jpg",
         "titlePillBg": "#121212",
         "titleTextColor": "#ffffff",
         "descLabelColor": "#174da8",
@@ -1527,7 +1527,7 @@ export const ALL_COURSES: CourseItem[] = [
     "bg": "#ffffff",
     "photoPos": "right",
     "photoWidth": 290,
-    "imageUrl": "/images/figma/210ae02d.jpg",
+    "imageUrl": "/images/figma/210ae02d-clean.jpg",
     "titlePillBg": "#121212",
     "titleTextColor": "#ffffff",
     "descLabelColor": "#174da8",
