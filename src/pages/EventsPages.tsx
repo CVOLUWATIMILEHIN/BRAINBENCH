@@ -897,8 +897,6 @@ export const TheEdgeEventPage: React.FC<EventPageSharedProps> = ({
 export const SparkItEventPage: React.FC<EventPageSharedProps> = ({
   onOpenLightbox,
 }) => {
-  const [isFormLoaded, setIsFormLoaded] = useState(false);
-
   return (
     <div className="w-full bg-white">
       <FourColorBar lastColor="#f58220" heightClass="h-4" />
@@ -1100,50 +1098,36 @@ export const SparkItEventPage: React.FC<EventPageSharedProps> = ({
       >
         <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-20 2xl:px-24">
           <div className="max-w-5xl mx-auto">
-            {/* Section Header & Fallback Action */}
-            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8">
-              <div>
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-md bg-[#1c3f9c] text-white mb-3">
-                  <FileText className="w-3.5 h-3.5 text-[#fdc12e] shrink-0" />
-                  <span className="font-montserrat font-extrabold text-xs uppercase tracking-widest text-[#fdc12e]">
-                    Official Event Registration · {UPCOMING_SPARK_IT_NOVEMBER_2026.date}
-                  </span>
-                </div>
-                <h2
-                  id="spark-it-registration-heading"
-                  className="font-montserrat font-extrabold text-2xl sm:text-4xl text-[#061539]"
-                >
-                  Register for Spark It — November 2026
-                </h2>
-                <p className="font-merriweather text-sm sm:text-base text-[#454545] mt-2.5 max-w-2xl leading-relaxed">
-                  Complete the official registration form below to register for{' '}
-                  <strong>{UPCOMING_SPARK_IT_NOVEMBER_2026.title}</strong> (
-                  <em>{UPCOMING_SPARK_IT_NOVEMBER_2026.tagline}</em>). You can
-                  submit the form directly on this page or open it in a new
-                  browser tab.
-                </p>
+            {/* Section Header */}
+            <div className="mb-8">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-md bg-[#1c3f9c] text-white mb-3">
+                <FileText className="w-3.5 h-3.5 text-[#fdc12e] shrink-0" />
+                <span className="font-montserrat font-extrabold text-xs uppercase tracking-widest text-[#fdc12e]">
+                  Official Event Registration · {UPCOMING_SPARK_IT_NOVEMBER_2026.date}
+                </span>
               </div>
-
-              <div className="shrink-0">
-                <a
-                  href={UPCOMING_SPARK_IT_NOVEMBER_2026.registrationFormUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full sm:w-auto justify-center px-6 py-3.5 bg-[#1c3f9c] hover:bg-[#174da8] text-white font-montserrat font-extrabold text-xs sm:text-sm rounded-lg inline-flex items-center gap-2.5 transition-colors shadow-xs"
-                >
-                  <span>Open Registration Form in a New Tab</span>
-                  <ExternalLink className="w-4 h-4 shrink-0" />
-                </a>
-              </div>
+              <h2
+                id="spark-it-registration-heading"
+                className="font-montserrat font-extrabold text-2xl sm:text-4xl text-[#061539]"
+              >
+                Register for Spark It — November 2026
+              </h2>
+              <p className="font-merriweather text-sm sm:text-base text-[#454545] mt-2.5 max-w-3xl leading-relaxed">
+                Complete your official registration below to secure your place for{' '}
+                <strong>{UPCOMING_SPARK_IT_NOVEMBER_2026.title}</strong> (
+                <em>{UPCOMING_SPARK_IT_NOVEMBER_2026.tagline}</em>). You can fill in
+                all fields and submit your registration directly inside this page
+                without navigating away from the website.
+              </p>
             </div>
 
-            {/* Responsive Embedded Google Form Container — Integrated Seamlessly as Part of Website */}
+            {/* Embedded Google Form Container — Integrated Seamlessly as Part of Website */}
             <div className="rounded-2xl border-2 border-[#1c3f9c] bg-white overflow-hidden shadow-md">
-              {/* Brainbench Signature Accent Bar */}
+              {/* Brainbench Signature Multi-Color Accent Bar */}
               <div className="h-2.5 w-full bg-gradient-to-r from-[#1c3f9c] via-[#d91f26] via-[#f7941d] to-[#1c3f9c]" />
 
               {/* Form Portal Header Bar */}
-              <div className="px-5 sm:px-8 py-4 bg-[#061539] text-white flex flex-wrap items-center justify-between gap-3 border-b border-[#1c3f9c]/30">
+              <div className="px-5 sm:px-8 py-3.5 bg-[#061539] text-white flex flex-wrap items-center justify-between gap-3 border-b border-[#1c3f9c]/30">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-[#1c3f9c] flex items-center justify-center shrink-0">
                     <FileText className="w-4 h-4 text-[#fdc12e]" />
@@ -1155,7 +1139,7 @@ export const SparkItEventPage: React.FC<EventPageSharedProps> = ({
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className="w-2 h-2 rounded-full bg-[#00ba51] animate-pulse shrink-0" />
                       <span className="font-montserrat font-semibold text-[11px] text-[#fdc12e]">
-                        Official Form Active · November 2026 Edition
+                        Official Registration Active · November 2026 Edition
                       </span>
                     </div>
                   </div>
@@ -1165,32 +1149,26 @@ export const SparkItEventPage: React.FC<EventPageSharedProps> = ({
                   href={UPCOMING_SPARK_IT_NOVEMBER_2026.registrationFormUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-montserrat font-bold text-xs rounded-lg inline-flex items-center gap-2 transition-colors border border-white/20"
+                  className="px-3.5 py-1.5 bg-white/10 hover:bg-white/20 text-white font-montserrat font-semibold text-xs rounded-md inline-flex items-center gap-1.5 transition-colors border border-white/20"
+                  title="Open the registration form in a new tab if required"
                 >
-                  <span>Open in Separate Tab</span>
+                  <span>Open in New Tab</span>
                   <ExternalLink className="w-3.5 h-3.5 text-[#fdc12e]" />
                 </a>
               </div>
 
               {/* Embedded Google Form Frame */}
-              <div className="relative w-full bg-[#fdfdfd] min-h-[850px] sm:min-h-[960px] lg:min-h-[1100px]">
-                {!isFormLoaded && (
-                  <div className="absolute inset-0 bg-[#F8F9FC] flex flex-col items-center justify-center p-8 z-10 transition-opacity duration-300">
-                    <div className="w-10 h-10 border-4 border-[#1c3f9c] border-t-[#d91f26] rounded-full animate-spin mb-4" />
-                    <p className="font-montserrat font-extrabold text-sm sm:text-base text-[#061539]">
-                      Loading Spark It Registration Form…
-                    </p>
-                    <p className="font-merriweather text-xs text-[#555] mt-1 text-center max-w-sm">
-                      Official registration portal for Brainbench Spark It — November 2026.
-                    </p>
-                  </div>
-                )}
-
+              <div className="relative w-full bg-white">
                 <iframe
                   src={UPCOMING_SPARK_IT_NOVEMBER_2026.registrationFormEmbedUrl}
                   title="Brainbench Spark It — November 2026 Registration Form"
-                  className="w-full h-[900px] sm:h-[1020px] lg:h-[1180px] border-0 block bg-white"
-                  onLoad={() => setIsFormLoaded(true)}
+                  width="100%"
+                  height="1500"
+                  frameBorder="0"
+                  marginHeight={0}
+                  marginWidth={0}
+                  className="w-full h-[1350px] sm:h-[1550px] lg:h-[1750px] border-0 block bg-white"
+                  loading="eager"
                   allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
                 >
                   Loading Brainbench Spark It registration form…
@@ -1200,13 +1178,19 @@ export const SparkItEventPage: React.FC<EventPageSharedProps> = ({
               {/* Persistent Helper & Privacy Bar Below Form */}
               <div className="px-6 py-4 bg-[#F8F9FC] text-[#121212] flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-[#e3e5f0]">
                 <p className="font-merriweather text-xs text-[#555] leading-relaxed">
-                  Responses are received directly by Brainbench Technology. Need assistance or have questions? Contact us at{' '}
-                  <a href="mailto:info@brainbenchtech.com" className="text-[#1c3f9c] font-bold hover:underline">
-                    info@brainbenchtech.com
+                  Submissions are received securely by Brainbench Technology. Need assistance or have questions? Contact us at{' '}
+                  <a
+                    href="mailto:info@bbtechng.com"
+                    className="text-[#1c3f9c] font-bold hover:underline"
+                  >
+                    info@bbtechng.com
                   </a>{' '}
                   or call{' '}
-                  <a href="tel:+2348037620333" className="text-[#1c3f9c] font-bold hover:underline">
-                    +234 803 762 0333
+                  <a
+                    href="tel:+2348160993158"
+                    className="text-[#1c3f9c] font-bold hover:underline"
+                  >
+                    +234 816 099 3158
                   </a>
                   .
                 </p>
@@ -1214,9 +1198,9 @@ export const SparkItEventPage: React.FC<EventPageSharedProps> = ({
                   href={UPCOMING_SPARK_IT_NOVEMBER_2026.registrationFormUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-4 py-2 bg-[#1c3f9c] hover:bg-[#174da8] text-white font-montserrat font-bold text-xs rounded-lg inline-flex items-center justify-center gap-2 transition-colors shrink-0 shadow-xs"
+                  className="text-xs text-[#1c3f9c] hover:underline font-montserrat font-bold inline-flex items-center gap-1 shrink-0"
                 >
-                  <span>Open Full Form in New Tab</span>
+                  <span>Google Forms External Fallback</span>
                   <ExternalLink className="w-3.5 h-3.5 shrink-0" />
                 </a>
               </div>

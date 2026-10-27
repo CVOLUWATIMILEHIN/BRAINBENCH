@@ -71,8 +71,8 @@ const HERO_SLIDES: HeroSlideData[] = [
       'Explore practical learning experiences across AI, automation, product design, data analysis, and web development.',
     primaryCtaLabel: 'Explore Courses',
     primaryCtaRoute: '/courses',
-    secondaryCtaLabel: 'View Programmes',
-    secondaryCtaRoute: '/programmes',
+    secondaryCtaLabel: 'View Solutions',
+    secondaryCtaRoute: '/solutions',
     imageUrl: '/images/figma/9a992152.jpg',
     fallbackImageUrl: '/images/figma/f064034f.jpg',
     imageAlt:
@@ -103,8 +103,8 @@ const HERO_SLIDES: HeroSlideData[] = [
       'A platform for sparking ideas, encouraging creativity, and exploring innovation through engaging academic experiences.',
     primaryCtaLabel: 'Discover Brainbench Spark It',
     primaryCtaRoute: '/events/brainbench-spark-it',
-    secondaryCtaLabel: 'Explore Programmes',
-    secondaryCtaRoute: '/programmes',
+    secondaryCtaLabel: 'Explore Solutions',
+    secondaryCtaRoute: '/solutions',
     imageUrl: '/images/figma/72fcae01.jpg',
     fallbackImageUrl: '/images/figma/2a9182e3.jpg',
     imageAlt:

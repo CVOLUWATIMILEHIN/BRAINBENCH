@@ -42,6 +42,7 @@ import {
   ContactPage,
   CoursesPage,
   ProgrammesPage,
+  SolutionsPage,
 } from './pages/SitePages';
 import { Link, useRouter } from './router';
 import { sanitizeDomId, sanitizeSearchQuery } from './utils/security';
@@ -328,12 +329,14 @@ export default function App() {
             </Link>
 
             <Link
-              to="/programmes"
+              to="/solutions"
               className={`inline-flex items-center gap-1 hover:text-[#0a309e] transition-colors whitespace-nowrap shrink-0 ${
-                currentPath === '/programmes' ? 'text-[#0a309e] font-bold' : ''
+                currentPath === '/solutions' || currentPath === '/programmes'
+                  ? 'text-[#0a309e] font-bold'
+                  : ''
               }`}
             >
-              <span>Programmes</span>
+              <span>Solutions</span>
             </Link>
 
             {/* Events Link + Submenu Dropdown for The Edge & Spark IT */}
@@ -450,8 +453,8 @@ export default function App() {
               <Link to="/courses" className="py-1.5 hover:text-[#0a309e]">
                 Courses
               </Link>
-              <Link to="/programmes" className="py-1.5 hover:text-[#0a309e]">
-                Programmes
+              <Link to="/solutions" className="py-1.5 hover:text-[#0a309e]">
+                Solutions
               </Link>
               <Link to="/events" className="py-1.5 hover:text-[#0a309e]">
                 Events
@@ -504,13 +507,8 @@ export default function App() {
             onOpenEnrol={() => setIsEnrolModalOpen(true)}
             onClearSelectedCourses={() => setSelectedCourseIds([])}
           />
-        ) : currentPath === '/programmes' ? (
-          <ProgrammesPage
-            onOpenEnrol={() => setIsEnrolModalOpen(true)}
-            onOpenLightbox={(imageUrl, caption, label) =>
-              setLightboxData({ imageUrl, caption, label })
-            }
-          />
+        ) : currentPath === '/solutions' || currentPath === '/programmes' ? (
+          <SolutionsPage onOpenEnrol={() => setIsEnrolModalOpen(true)} />
         ) : currentPath === '/events' ? (
           <EventsOverviewPage
             onOpenEnrol={() => setIsEnrolModalOpen(true)}
@@ -1737,10 +1735,10 @@ export default function App() {
                 </li>
                 <li>
                   <Link
-                    to="/programmes"
+                    to="/solutions"
                     className="hover:text-[#fdc12e] transition-colors"
                   >
-                    Programmes
+                    Solutions
                   </Link>
                 </li>
                 <li>

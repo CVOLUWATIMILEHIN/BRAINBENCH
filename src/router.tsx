@@ -23,7 +23,11 @@ const RouterContext = createContext<RouterContextValue | null>(null);
 function normalizePathname(rawPath: string): string {
   if (!rawPath || rawPath === '/') return '/';
   const cleaned = rawPath.replace(/\/+$/, '');
-  return cleaned.startsWith('/') ? cleaned : `/${cleaned}`;
+  const normalized = cleaned.startsWith('/') ? cleaned : `/${cleaned}`;
+  if (normalized === '/programmes') {
+    return '/solutions';
+  }
+  return normalized;
 }
 
 function getWindowLocation(): RouteLocation {
@@ -56,10 +60,15 @@ const ROUTE_META: Record<
     description:
       'Explore all 39 certified technology, design, data analysis, accounting, management, and AI courses offered by Brainbench Technology.',
   },
-  '/programmes': {
-    title: 'Educational & Career Programmes | Brainbench Technology',
+  '/solutions': {
+    title: 'Software Solutions & Products | Brainbench Technology',
     description:
-      'Discover Brainbench Technology academic programmes, professional tracks, The Edge: Beyond the Classroom, and Brainbench Spark It.',
+      'Explore Brainbench Technology software solutions: ULTRA CBT (Computer-Based Testing and examination management), PORTAL PRO (School Portal and digital school management), and LMS E-LIBRARY (Digital library repository and e-learning).',
+  },
+  '/programmes': {
+    title: 'Software Solutions & Products | Brainbench Technology',
+    description:
+      'Explore Brainbench Technology software solutions: ULTRA CBT, PORTAL PRO, and LMS E-LIBRARY.',
   },
   '/events': {
     title: 'Events & Programmes | Brainbench Technology',

@@ -91,6 +91,7 @@ export const ALLOWED_INQUIRY_TOPICS = [
   'THE EDGE: Beyond the Classroom (Bi-Weekly Event)',
   'BRAINBENCH SPARK IT (Quarterly Event)',
   'Educational & Corporate Programmes',
+  'Software Solutions Demo (ULTRA CBT, PORTAL PRO, LMS)',
   'General Inquiry',
 ] as const;
 export type AllowedInquiryTopic = (typeof ALLOWED_INQUIRY_TOPICS)[number];
@@ -351,7 +352,9 @@ export function validateContactInquiryForm(
  * Generates a cryptographically strong reference code using the Web Crypto API
  * instead of predictable Math.random().
  */
-export function generateSecureReference(prefix: 'BBT-2026' | 'BBT-INQ'): string {
+export function generateSecureReference(
+  prefix: 'BBT-2026' | 'BBT-INQ' | 'BBT-SOL' | string
+): string {
   if (typeof window !== 'undefined' && window.crypto?.getRandomValues) {
     const randomBuffer = new Uint32Array(2);
     window.crypto.getRandomValues(randomBuffer);
@@ -380,7 +383,11 @@ export interface RateLimitCheckResult {
  * Returns HTTP 429 semantics when the threshold is exceeded.
  */
 export function checkAndRecordRateLimit(
-  actionKey: 'enrolment_submit' | 'contact_inquiry_submit',
+  actionKey:
+    | 'enrolment_submit'
+    | 'contact_inquiry_submit'
+    | 'solution_demo_request'
+    | string,
   maxAttempts = 3,
   windowMs = 10 * 60 * 1000
 ): RateLimitCheckResult {
