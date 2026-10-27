@@ -34,7 +34,7 @@ export default defineConfig(() => {
         'Strict-Transport-Security': 'max-age=31536000',
         'X-Frame-Options': 'SAMEORIGIN',
         'Content-Security-Policy':
-          "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self'; media-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'",
+          "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self'; media-src 'self'; frame-src 'self' https://docs.google.com https://forms.gle https://accounts.google.com https://*.google.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'",
       },
     },
     build: {

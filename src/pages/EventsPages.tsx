@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   ArrowLeft,
   ArrowRight,
   Calendar,
   Compass,
+  ExternalLink,
+  FileText,
+  Images,
   Lightbulb,
   Maximize2,
   Sparkles,
@@ -13,6 +16,7 @@ import { Link } from '../router';
 import {
   SPARK_IT_EVENT_DATA,
   THE_EDGE_EVENT_DATA,
+  UPCOMING_SPARK_IT_NOVEMBER_2026,
 } from '../data/eventsData';
 import {
   DiagonalStripes,
@@ -102,6 +106,115 @@ export const EventsOverviewPage: React.FC<EventPageSharedProps> = ({
                 <span>Discover Brainbench Spark It</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Upcoming Event Spotlight: Brainbench Spark It — November Edition */}
+      <section
+        id="upcoming-events"
+        className="w-full py-16 lg:py-24 bg-white border-b border-[#e3e5f0]"
+      >
+        <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-20 2xl:px-24">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+            <div>
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-md bg-[#d91f26] text-white mb-3">
+                <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                <span className="font-montserrat font-extrabold text-xs uppercase tracking-widest">
+                  Upcoming Events
+                </span>
+              </div>
+              <h2 className="font-montserrat font-extrabold text-3xl sm:text-4xl text-[#061539]">
+                {UPCOMING_SPARK_IT_NOVEMBER_2026.title}
+              </h2>
+            </div>
+            <p className="font-merriweather text-sm text-[#454545] max-w-[52ch]">
+              Our next quarterly student and graduate showcase is coming up in{' '}
+              <strong>{UPCOMING_SPARK_IT_NOVEMBER_2026.date}</strong>. Click the
+              official flyer to view in full screen.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border-2 border-[#1c3f9c] bg-gradient-to-br from-[#F8F9FC] via-white to-[#eef3fc] overflow-hidden shadow-sm">
+            <div className="h-2 w-full bg-gradient-to-r from-[#1c3f9c] via-[#d91f26] to-[#1c3f9c]" />
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 p-6 sm:p-8 lg:p-12 items-center">
+              {/* Left Column: Official Flyer (Original Aspect Ratio, Complete Design Visible) */}
+              <div className="lg:col-span-5 flex justify-center">
+                <div
+                  onClick={() =>
+                    onOpenLightbox(
+                      UPCOMING_SPARK_IT_NOVEMBER_2026.flyerImageUrl,
+                      `${UPCOMING_SPARK_IT_NOVEMBER_2026.title} (${UPCOMING_SPARK_IT_NOVEMBER_2026.date}) — ${UPCOMING_SPARK_IT_NOVEMBER_2026.description}`,
+                      UPCOMING_SPARK_IT_NOVEMBER_2026.title
+                    )
+                  }
+                  className="group relative w-full max-w-[380px] sm:max-w-[420px] rounded-xl border border-[#d5d9eb] bg-white p-2.5 shadow-sm cursor-pointer transition-transform duration-200 hover:scale-[1.01]"
+                >
+                  <ResilientImage
+                    src={UPCOMING_SPARK_IT_NOVEMBER_2026.flyerImageUrl}
+                    alt={`${UPCOMING_SPARK_IT_NOVEMBER_2026.title} Official Flyer`}
+                    className="w-full h-auto object-contain rounded-lg block"
+                  />
+                  <div className="mt-2.5 flex items-center justify-between px-2 py-1 text-[11px] font-montserrat font-bold text-[#1c3f9c]">
+                    <span>
+                      Official Promotional Flyer ·{' '}
+                      {UPCOMING_SPARK_IT_NOVEMBER_2026.date}
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-[#d91f26]">
+                      <Maximize2 className="w-3.5 h-3.5" />
+                      <span>Full View</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: Event Details & Navigation */}
+              <div className="lg:col-span-7 space-y-6">
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-[#d91f26] text-white font-montserrat font-extrabold text-xs uppercase tracking-wider">
+                    <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                    <span>Status: {UPCOMING_SPARK_IT_NOVEMBER_2026.status}</span>
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-[#1c3f9c] text-white font-montserrat font-extrabold text-xs uppercase tracking-wider">
+                    <Calendar className="w-3.5 h-3.5 text-[#fdc12e]" />
+                    <span>Date: {UPCOMING_SPARK_IT_NOVEMBER_2026.date}</span>
+                  </span>
+                </div>
+
+                <div>
+                  <h3 className="font-montserrat font-black text-2xl sm:text-3xl lg:text-4xl text-[#061539] leading-tight">
+                    {UPCOMING_SPARK_IT_NOVEMBER_2026.title}
+                  </h3>
+                  <p className="font-montserrat font-extrabold text-base sm:text-xl text-[#d91f26] mt-2">
+                    {UPCOMING_SPARK_IT_NOVEMBER_2026.tagline}
+                  </p>
+                </div>
+
+                <p className="font-merriweather text-sm sm:text-base text-[#121212] leading-relaxed max-w-2xl">
+                  {UPCOMING_SPARK_IT_NOVEMBER_2026.description}
+                </p>
+
+                <div className="pt-2 flex flex-wrap items-center gap-4">
+                  <Link
+                    to={UPCOMING_SPARK_IT_NOVEMBER_2026.eventRoute}
+                    className="px-6 py-3.5 bg-[#1c3f9c] hover:bg-[#174da8] text-white font-montserrat font-extrabold text-xs sm:text-sm rounded-lg inline-flex items-center gap-2 transition-colors shadow-xs"
+                  >
+                    <span>{UPCOMING_SPARK_IT_NOVEMBER_2026.ctaLabel}</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+
+                  <a
+                    href={UPCOMING_SPARK_IT_NOVEMBER_2026.previousEditionGalleryUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-5 py-3.5 bg-white hover:bg-[#F8F9FC] text-[#061539] border-2 border-[#1c3f9c] font-montserrat font-bold text-xs sm:text-sm rounded-lg inline-flex items-center gap-2 transition-colors"
+                  >
+                    <span>{UPCOMING_SPARK_IT_NOVEMBER_2026.previousEditionGalleryLabel}</span>
+                    <ExternalLink className="w-4 h-4 text-[#d91f26] shrink-0" />
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -784,6 +897,8 @@ export const TheEdgeEventPage: React.FC<EventPageSharedProps> = ({
 export const SparkItEventPage: React.FC<EventPageSharedProps> = ({
   onOpenLightbox,
 }) => {
+  const [isFormLoaded, setIsFormLoaded] = useState(false);
+
   return (
     <div className="w-full bg-white">
       <FourColorBar lastColor="#f58220" heightClass="h-4" />
@@ -864,13 +979,247 @@ export const SparkItEventPage: React.FC<EventPageSharedProps> = ({
 
             {/* Hero Primary Action */}
             <div className="mt-8 flex flex-wrap items-center gap-4">
+              <a
+                href="#register-spark-it-november-2026"
+                className="px-6 py-3.5 bg-[#f58d00] hover:bg-[#e07f00] text-[#061539] font-montserrat font-extrabold text-sm rounded-[10px] inline-flex items-center gap-2.5 transition-all"
+              >
+                <span>Register for Spark It — November 2026</span>
+                <ArrowRight className="w-4 h-4" />
+              </a>
+
               <Link
                 to="/events"
-                className="px-6 py-3.5 bg-[#f58d00] hover:bg-[#e07f00] text-[#061539] font-montserrat font-extrabold text-sm rounded-[10px] inline-flex items-center gap-2.5 transition-all"
+                className="px-6 py-3.5 bg-[#0a309e]/85 hover:bg-[#0a309e] text-white border border-white/75 font-montserrat font-bold text-sm rounded-[10px] inline-flex items-center gap-2.5 transition-all"
               >
                 <span>Explore Our Events</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 1B. UPCOMING EDITION SPOTLIGHT: BRAINBENCH SPARK IT — NOVEMBER EDITION (NOVEMBER 2026) */}
+      <section
+        id="upcoming-november-2026"
+        className="w-full py-16 lg:py-24 bg-[#F8F9FC] border-b border-[#e3e5f0]"
+      >
+        <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-20 2xl:px-24">
+          <div className="rounded-2xl border-2 border-[#1c3f9c] bg-white overflow-hidden shadow-sm">
+            <div className="h-2.5 w-full bg-gradient-to-r from-[#1c3f9c] via-[#d91f26] to-[#1c3f9c]" />
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 p-6 sm:p-8 lg:p-12 items-center">
+              {/* Left Column: Official November 2026 Flyer (Original Aspect Ratio, Complete Design Visible) */}
+              <div className="lg:col-span-5 flex justify-center">
+                <div
+                  onClick={() =>
+                    onOpenLightbox(
+                      UPCOMING_SPARK_IT_NOVEMBER_2026.flyerImageUrl,
+                      `${UPCOMING_SPARK_IT_NOVEMBER_2026.title} (${UPCOMING_SPARK_IT_NOVEMBER_2026.date}) — ${UPCOMING_SPARK_IT_NOVEMBER_2026.description}`,
+                      UPCOMING_SPARK_IT_NOVEMBER_2026.title
+                    )
+                  }
+                  className="group relative w-full max-w-[380px] sm:max-w-[420px] rounded-xl border border-[#d5d9eb] bg-[#F8F9FC] p-2.5 shadow-sm cursor-pointer transition-transform duration-200 hover:scale-[1.01]"
+                >
+                  <ResilientImage
+                    src={UPCOMING_SPARK_IT_NOVEMBER_2026.flyerImageUrl}
+                    alt={`${UPCOMING_SPARK_IT_NOVEMBER_2026.title} Official Flyer`}
+                    className="w-full h-auto object-contain rounded-lg block"
+                  />
+                  <div className="mt-2.5 flex items-center justify-between px-2 py-1 text-[11px] font-montserrat font-bold text-[#1c3f9c]">
+                    <span>
+                      Official Promotional Flyer ·{' '}
+                      {UPCOMING_SPARK_IT_NOVEMBER_2026.date}
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-[#d91f26]">
+                      <Maximize2 className="w-3.5 h-3.5" />
+                      <span>Click to Enlarge</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: Upcoming November 2026 Event Information */}
+              <div className="lg:col-span-7 space-y-6">
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-[#d91f26] text-white font-montserrat font-extrabold text-xs uppercase tracking-wider">
+                    <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                    <span>Status: {UPCOMING_SPARK_IT_NOVEMBER_2026.status}</span>
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-[#1c3f9c] text-white font-montserrat font-extrabold text-xs uppercase tracking-wider">
+                    <Calendar className="w-3.5 h-3.5 text-[#fdc12e]" />
+                    <span>Date: {UPCOMING_SPARK_IT_NOVEMBER_2026.date}</span>
+                  </span>
+                </div>
+
+                <div>
+                  <h2 className="font-montserrat font-black text-2xl sm:text-3xl lg:text-4xl text-[#061539] leading-tight">
+                    {UPCOMING_SPARK_IT_NOVEMBER_2026.title}
+                  </h2>
+                  <p className="font-montserrat font-extrabold text-base sm:text-xl text-[#d91f26] mt-2">
+                    {UPCOMING_SPARK_IT_NOVEMBER_2026.tagline}
+                  </p>
+                </div>
+
+                <p className="font-merriweather text-sm sm:text-base text-[#121212] leading-relaxed max-w-2xl">
+                  {UPCOMING_SPARK_IT_NOVEMBER_2026.description}
+                </p>
+
+                <div className="pt-2 border-t border-[#e3e5f0] flex flex-wrap items-center gap-4">
+                  <a
+                    href="#register-spark-it-november-2026"
+                    className="px-6 py-3.5 bg-[#d91f26] hover:bg-[#b81920] text-white font-montserrat font-extrabold text-xs sm:text-sm rounded-lg inline-flex items-center gap-2.5 transition-colors shadow-xs"
+                  >
+                    <FileText className="w-4 h-4 shrink-0" />
+                    <span>Register for Spark It — November 2026</span>
+                  </a>
+
+                  <a
+                    href={UPCOMING_SPARK_IT_NOVEMBER_2026.previousEditionGalleryUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-6 py-3.5 bg-[#061539] hover:bg-[#1c3f9c] text-white font-montserrat font-extrabold text-xs sm:text-sm rounded-lg inline-flex items-center gap-2.5 transition-colors"
+                  >
+                    <Images className="w-4 h-4 text-[#fdc12e] shrink-0" />
+                    <span>
+                      {UPCOMING_SPARK_IT_NOVEMBER_2026.previousEditionGalleryLabel}
+                    </span>
+                    <ExternalLink className="w-4 h-4 text-[#fdc12e] shrink-0" />
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 1C. EMBEDDED REGISTRATION SECTION: REGISTER FOR SPARK IT — NOVEMBER 2026 */}
+      <section
+        id="register-spark-it-november-2026"
+        aria-labelledby="spark-it-registration-heading"
+        className="w-full py-16 lg:py-24 bg-white border-b border-[#e3e5f0] scroll-mt-20"
+      >
+        <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-20 2xl:px-24">
+          <div className="max-w-5xl mx-auto">
+            {/* Section Header & Fallback Action */}
+            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-md bg-[#1c3f9c] text-white mb-3">
+                  <FileText className="w-3.5 h-3.5 text-[#fdc12e] shrink-0" />
+                  <span className="font-montserrat font-extrabold text-xs uppercase tracking-widest text-[#fdc12e]">
+                    Official Event Registration · {UPCOMING_SPARK_IT_NOVEMBER_2026.date}
+                  </span>
+                </div>
+                <h2
+                  id="spark-it-registration-heading"
+                  className="font-montserrat font-extrabold text-2xl sm:text-4xl text-[#061539]"
+                >
+                  Register for Spark It — November 2026
+                </h2>
+                <p className="font-merriweather text-sm sm:text-base text-[#454545] mt-2.5 max-w-2xl leading-relaxed">
+                  Complete the official registration form below to register for{' '}
+                  <strong>{UPCOMING_SPARK_IT_NOVEMBER_2026.title}</strong> (
+                  <em>{UPCOMING_SPARK_IT_NOVEMBER_2026.tagline}</em>). You can
+                  submit the form directly on this page or open it in a new
+                  browser tab.
+                </p>
+              </div>
+
+              <div className="shrink-0">
+                <a
+                  href={UPCOMING_SPARK_IT_NOVEMBER_2026.registrationFormUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:w-auto justify-center px-6 py-3.5 bg-[#1c3f9c] hover:bg-[#174da8] text-white font-montserrat font-extrabold text-xs sm:text-sm rounded-lg inline-flex items-center gap-2.5 transition-colors shadow-xs"
+                >
+                  <span>Open Registration Form in a New Tab</span>
+                  <ExternalLink className="w-4 h-4 shrink-0" />
+                </a>
+              </div>
+            </div>
+
+            {/* Responsive Embedded Google Form Container — Integrated Seamlessly as Part of Website */}
+            <div className="rounded-2xl border-2 border-[#1c3f9c] bg-white overflow-hidden shadow-md">
+              {/* Brainbench Signature Accent Bar */}
+              <div className="h-2.5 w-full bg-gradient-to-r from-[#1c3f9c] via-[#d91f26] via-[#f7941d] to-[#1c3f9c]" />
+
+              {/* Form Portal Header Bar */}
+              <div className="px-5 sm:px-8 py-4 bg-[#061539] text-white flex flex-wrap items-center justify-between gap-3 border-b border-[#1c3f9c]/30">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-[#1c3f9c] flex items-center justify-center shrink-0">
+                    <FileText className="w-4 h-4 text-[#fdc12e]" />
+                  </div>
+                  <div>
+                    <div className="font-montserrat font-bold text-xs sm:text-sm text-white">
+                      Brainbench Spark It — Registration Portal
+                    </div>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="w-2 h-2 rounded-full bg-[#00ba51] animate-pulse shrink-0" />
+                      <span className="font-montserrat font-semibold text-[11px] text-[#fdc12e]">
+                        Official Form Active · November 2026 Edition
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <a
+                  href={UPCOMING_SPARK_IT_NOVEMBER_2026.registrationFormUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-montserrat font-bold text-xs rounded-lg inline-flex items-center gap-2 transition-colors border border-white/20"
+                >
+                  <span>Open in Separate Tab</span>
+                  <ExternalLink className="w-3.5 h-3.5 text-[#fdc12e]" />
+                </a>
+              </div>
+
+              {/* Embedded Google Form Frame */}
+              <div className="relative w-full bg-[#fdfdfd] min-h-[850px] sm:min-h-[960px] lg:min-h-[1100px]">
+                {!isFormLoaded && (
+                  <div className="absolute inset-0 bg-[#F8F9FC] flex flex-col items-center justify-center p-8 z-10 transition-opacity duration-300">
+                    <div className="w-10 h-10 border-4 border-[#1c3f9c] border-t-[#d91f26] rounded-full animate-spin mb-4" />
+                    <p className="font-montserrat font-extrabold text-sm sm:text-base text-[#061539]">
+                      Loading Spark It Registration Form…
+                    </p>
+                    <p className="font-merriweather text-xs text-[#555] mt-1 text-center max-w-sm">
+                      Official registration portal for Brainbench Spark It — November 2026.
+                    </p>
+                  </div>
+                )}
+
+                <iframe
+                  src={UPCOMING_SPARK_IT_NOVEMBER_2026.registrationFormEmbedUrl}
+                  title="Brainbench Spark It — November 2026 Registration Form"
+                  className="w-full h-[900px] sm:h-[1020px] lg:h-[1180px] border-0 block bg-white"
+                  onLoad={() => setIsFormLoaded(true)}
+                  allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                >
+                  Loading Brainbench Spark It registration form…
+                </iframe>
+              </div>
+
+              {/* Persistent Helper & Privacy Bar Below Form */}
+              <div className="px-6 py-4 bg-[#F8F9FC] text-[#121212] flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-[#e3e5f0]">
+                <p className="font-merriweather text-xs text-[#555] leading-relaxed">
+                  Responses are received directly by Brainbench Technology. Need assistance or have questions? Contact us at{' '}
+                  <a href="mailto:info@brainbenchtech.com" className="text-[#1c3f9c] font-bold hover:underline">
+                    info@brainbenchtech.com
+                  </a>{' '}
+                  or call{' '}
+                  <a href="tel:+2348037620333" className="text-[#1c3f9c] font-bold hover:underline">
+                    +234 803 762 0333
+                  </a>
+                  .
+                </p>
+                <a
+                  href={UPCOMING_SPARK_IT_NOVEMBER_2026.registrationFormUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 bg-[#1c3f9c] hover:bg-[#174da8] text-white font-montserrat font-bold text-xs rounded-lg inline-flex items-center justify-center gap-2 transition-colors shrink-0 shadow-xs"
+                >
+                  <span>Open Full Form in New Tab</span>
+                  <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                </a>
+              </div>
             </div>
           </div>
         </div>
@@ -1072,15 +1421,16 @@ export const SparkItEventPage: React.FC<EventPageSharedProps> = ({
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
             <div>
               <div className="text-xs font-montserrat font-extrabold uppercase tracking-widest text-[#1c3f9c]">
-                AUTHENTIC EVENT PHOTOGRAPHS
+                PREVIOUS EDITION GALLERY · AUTHENTIC EVENT PHOTOGRAPHS
               </div>
               <h2 className="font-montserrat font-extrabold text-3xl sm:text-4xl text-[#121212] mt-2">
-                Brainbench Spark It Showcase Gallery
+                Previous Edition Gallery: Brainbench Spark It Showcase
               </h2>
             </div>
             <p className="font-merriweather text-sm text-[#454545] max-w-[52ch]">
-              Select any photograph from Brainbench Spark It presentations and
-              showcases at Brainbench Technology to view in full resolution.
+              Select any photograph from our previous Brainbench Spark It
+              presentations and showcases at Brainbench Technology to view in
+              full resolution.
             </p>
           </div>
 
@@ -1119,6 +1469,90 @@ export const SparkItEventPage: React.FC<EventPageSharedProps> = ({
           </div>
         </div>
       </section>
+
+      {/* 4B. PREVIOUS EDITION GALLERY SECTION */}
+      {SPARK_IT_EVENT_DATA.previousEditionGalleryUrl && (
+        <section
+          aria-labelledby="previous-spark-it-gallery-heading"
+          className="w-full py-16 lg:py-24 bg-[#F8F9FC] border-b border-[#e3e5f0]"
+        >
+          <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-20 2xl:px-24">
+            <div className="bg-[#061539] rounded-2xl border-2 border-[#f58220] overflow-hidden shadow-sm">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 p-7 sm:p-10 lg:p-12 items-center">
+                {/* Left Content Column */}
+                <div className="lg:col-span-7 space-y-5">
+                  <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-md bg-[#1c3f9c] border border-white/15">
+                    <Images className="w-4 h-4 text-[#fdc12e] shrink-0" />
+                    <span className="font-montserrat font-extrabold text-xs tracking-[0.16em] uppercase text-[#fdc12e]">
+                      Previous Edition Gallery
+                    </span>
+                  </div>
+
+                  <h2
+                    id="previous-spark-it-gallery-heading"
+                    className="font-montserrat font-extrabold text-2xl sm:text-4xl text-white leading-tight"
+                  >
+                    Relive the Previous Spark It
+                  </h2>
+
+                  <p className="font-merriweather text-sm sm:text-base text-white/90 leading-relaxed max-w-2xl">
+                    Explore the complete photo album from our previous edition of{' '}
+                    <strong className="text-white">Brainbench Spark It</strong>.
+                    See our student and graduate presenters on stage, live Q&amp;A
+                    moments with the expert review panel, and the tech community
+                    coming together at Brainbench Technology.
+                  </p>
+
+                  <div className="pt-2 flex flex-wrap items-center gap-4">
+                    <a
+                      href={SPARK_IT_EVENT_DATA.previousEditionGalleryUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full sm:w-auto justify-center px-7 py-4 bg-[#f58220] hover:bg-[#fdc12e] text-[#121212] font-montserrat font-extrabold text-sm sm:text-base rounded-lg inline-flex items-center gap-2.5 transition-colors shadow-xs"
+                    >
+                      <span>View Previous Edition Photos</span>
+                      <ExternalLink className="w-4 h-4 shrink-0" />
+                    </a>
+                  </div>
+                </div>
+
+                {/* Right Reliable Preview Strip (Using Verified Local Spark It Photos) */}
+                <div className="lg:col-span-5">
+                  <div className="grid grid-cols-3 gap-3 sm:gap-4">
+                    {SPARK_IT_EVENT_DATA.galleryHighlights
+                      .slice(0, 3)
+                      .map((photo, idx) => (
+                        <a
+                          key={`prev-preview-${photo.id}`}
+                          href={SPARK_IT_EVENT_DATA.previousEditionGalleryUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`View Previous Edition Photos — ${photo.caption}`}
+                          className={`group relative aspect-[3/4] rounded-xl overflow-hidden border-2 bg-[#121212] block ${
+                            idx === 1 ? 'border-[#fdc12e]' : 'border-[#1c3f9c]'
+                          }`}
+                        >
+                          <ResilientImage
+                            src={photo.imageUrl}
+                            alt={photo.caption}
+                            objectPosition={photo.objectPosition}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-[#061539]/80 via-transparent to-transparent flex items-end p-2.5">
+                            <span className="text-[10px] font-montserrat font-bold text-[#fdc12e] uppercase tracking-wider flex items-center gap-1">
+                              <span>Album</span>
+                              <ExternalLink className="w-3 h-3 shrink-0" />
+                            </span>
+                          </div>
+                        </a>
+                      ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* 5. CALL TO ACTION SECTION */}
       <section className="relative w-full bg-[#174da8] text-white py-20 overflow-hidden">

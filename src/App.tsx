@@ -18,6 +18,7 @@ import {
 import {
   SPARK_IT_EVENT_DATA,
   THE_EDGE_EVENT_DATA,
+  UPCOMING_SPARK_IT_NOVEMBER_2026,
 } from './data/eventsData';
 import {
   CourseWebsiteCard,
@@ -49,6 +50,7 @@ import {
   Calculator,
   Calendar,
   ChevronDown,
+  ExternalLink,
   Maximize2,
   Menu,
   QrCode,
@@ -768,6 +770,90 @@ export default function App() {
                     <span>Explore Our Events</span>
                     <ArrowRight className="w-4 h-4" />
                   </Link>
+                </div>
+
+                {/* UPCOMING EVENT SPOTLIGHT: Brainbench Spark It — November Edition */}
+                <div className="mb-12 rounded-2xl border-2 border-[#1c3f9c] bg-gradient-to-br from-[#F8F9FC] via-white to-[#eef3fc] overflow-hidden shadow-sm">
+                  <div className="h-2 w-full bg-gradient-to-r from-[#1c3f9c] via-[#d91f26] to-[#1c3f9c]" />
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 p-6 sm:p-8 lg:p-10 items-center">
+                    {/* Left: Official Flyer (Original Aspect Ratio, Complete Design Visible) */}
+                    <div className="lg:col-span-5 flex justify-center">
+                      <div
+                        onClick={() =>
+                          setLightboxData({
+                            imageUrl:
+                              UPCOMING_SPARK_IT_NOVEMBER_2026.flyerImageUrl,
+                            caption: `${UPCOMING_SPARK_IT_NOVEMBER_2026.title} (${UPCOMING_SPARK_IT_NOVEMBER_2026.date}) — ${UPCOMING_SPARK_IT_NOVEMBER_2026.description}`,
+                            label: UPCOMING_SPARK_IT_NOVEMBER_2026.title,
+                          })
+                        }
+                        className="group relative w-full max-w-[380px] sm:max-w-[420px] rounded-xl border border-[#d5d9eb] bg-white p-2 shadow-sm cursor-pointer transition-transform duration-200 hover:scale-[1.01]"
+                      >
+                        <ResilientImage
+                          src={UPCOMING_SPARK_IT_NOVEMBER_2026.flyerImageUrl}
+                          alt={`${UPCOMING_SPARK_IT_NOVEMBER_2026.title} Official Flyer`}
+                          className="w-full h-auto object-contain rounded-lg block"
+                        />
+                        <div className="mt-2 flex items-center justify-between px-2 py-1 text-[11px] font-montserrat font-bold text-[#1c3f9c]">
+                          <span>Official Event Flyer · {UPCOMING_SPARK_IT_NOVEMBER_2026.date}</span>
+                          <span className="inline-flex items-center gap-1 text-[#d91f26]">
+                            <Maximize2 className="w-3.5 h-3.5" />
+                            <span>Enlarge</span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right: Upcoming Event Details */}
+                    <div className="lg:col-span-7 space-y-5">
+                      <div className="flex flex-wrap items-center gap-2.5">
+                        <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-[#d91f26] text-white font-montserrat font-extrabold text-xs uppercase tracking-wider">
+                          <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                          <span>Status: {UPCOMING_SPARK_IT_NOVEMBER_2026.status}</span>
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-[#1c3f9c] text-white font-montserrat font-extrabold text-xs uppercase tracking-wider">
+                          <Calendar className="w-3.5 h-3.5 text-[#fdc12e]" />
+                          <span>{UPCOMING_SPARK_IT_NOVEMBER_2026.date}</span>
+                        </span>
+                        <span className="inline-flex items-center px-3 py-1.5 rounded-md bg-[#e8f0fc] text-[#1c3f9c] font-montserrat font-bold text-xs uppercase tracking-wider">
+                          Upcoming Events
+                        </span>
+                      </div>
+
+                      <div>
+                        <h3 className="font-montserrat font-black text-2xl sm:text-3xl lg:text-4xl text-[#061539] leading-tight">
+                          {UPCOMING_SPARK_IT_NOVEMBER_2026.title}
+                        </h3>
+                        <p className="font-montserrat font-extrabold text-base sm:text-lg text-[#d91f26] mt-2">
+                          {UPCOMING_SPARK_IT_NOVEMBER_2026.tagline}
+                        </p>
+                      </div>
+
+                      <p className="font-merriweather text-sm sm:text-base text-[#121212] leading-relaxed max-w-2xl">
+                        {UPCOMING_SPARK_IT_NOVEMBER_2026.description}
+                      </p>
+
+                      <div className="pt-2 flex flex-wrap items-center gap-3.5">
+                        <Link
+                          to={UPCOMING_SPARK_IT_NOVEMBER_2026.eventRoute}
+                          className="px-6 py-3.5 bg-[#1c3f9c] hover:bg-[#174da8] text-white font-montserrat font-extrabold text-xs sm:text-sm rounded-lg inline-flex items-center gap-2 transition-colors shadow-xs"
+                        >
+                          <span>{UPCOMING_SPARK_IT_NOVEMBER_2026.ctaLabel}</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </Link>
+
+                        <a
+                          href={UPCOMING_SPARK_IT_NOVEMBER_2026.previousEditionGalleryUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-5 py-3.5 bg-white hover:bg-[#F8F9FC] text-[#061539] border-2 border-[#1c3f9c] font-montserrat font-bold text-xs sm:text-sm rounded-lg inline-flex items-center gap-2 transition-colors"
+                        >
+                          <span>{UPCOMING_SPARK_IT_NOVEMBER_2026.previousEditionGalleryLabel}</span>
+                          <ExternalLink className="w-4 h-4 text-[#d91f26] shrink-0" />
+                        </a>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

@@ -35,6 +35,7 @@ export interface EventProgramData {
   supportingSections: SupportingSectionItem[];
   programmeDetails: ProgrammeDetailField[];
   galleryHighlights: EventHighlightPhoto[];
+  previousEditionGalleryUrl?: string;
 }
 
 export const THE_EDGE_EVENT_DATA: EventProgramData = {
@@ -272,6 +273,41 @@ export const SPARK_IT_EVENT_DATA: EventProgramData = {
         'Brainbench Technology community of students, graduates, and builders.',
     },
   ],
+  previousEditionGalleryUrl: 'https://photos.app.goo.gl/3SFMhsCuH11XJksu5',
+};
+
+export interface UpcomingEventEdition {
+  id: string;
+  title: string;
+  date: string;
+  status: 'Upcoming';
+  description: string;
+  tagline: string;
+  flyerImageUrl: string;
+  eventRoute: '/events/brainbench-spark-it';
+  ctaLabel: string;
+  registrationFormUrl: string;
+  registrationFormEmbedUrl: string;
+  previousEditionGalleryUrl: string;
+  previousEditionGalleryLabel: string;
+}
+
+export const UPCOMING_SPARK_IT_NOVEMBER_2026: UpcomingEventEdition = {
+  id: 'spark-it-november-2026',
+  title: 'Brainbench Spark It — November Edition',
+  date: 'November 2026',
+  status: 'Upcoming',
+  description:
+    'A quarterly showcase where Brainbench students and graduates present their ideas, innovations, and solutions to an expert panel for challenging and constructive feedback.',
+  tagline: 'The Next Generation of Builders.',
+  flyerImageUrl: '/assets/aistudio/SPARK_IT_9d1d1986.png',
+  eventRoute: '/events/brainbench-spark-it',
+  ctaLabel: 'Explore Spark It',
+  registrationFormUrl: 'https://forms.gle/h2RuyXGsoTXNP2uv6',
+  registrationFormEmbedUrl:
+    'https://docs.google.com/forms/d/e/1FAIpQLScxsbx67UnhKJrk0a9Op9z3tQetcV4mFHm5NbyNweIZ6azLsg/viewform?embedded=true',
+  previousEditionGalleryUrl: 'https://photos.app.goo.gl/3SFMhsCuH11XJksu5',
+  previousEditionGalleryLabel: 'Previous Edition Gallery',
 };
 
 export const ALL_EVENTS_LIST: EventProgramData[] = [
