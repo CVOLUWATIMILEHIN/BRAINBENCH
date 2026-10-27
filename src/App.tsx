@@ -13,6 +13,7 @@ import {
   CourseItem,
   GALLERY_PAGE_18,
   GALLERY_PAGE_19,
+  sortCoursesAlphabetically,
 } from './data/brochureData';
 import {
   SPARK_IT_EVENT_DATA,
@@ -66,8 +67,8 @@ export default function App() {
     useState<string>('all');
   const [selectedDuration, setSelectedDuration] = useState<string>('all');
   const [sortBy, setSortBy] = useState<
-    'catalogue' | 'price-asc' | 'price-desc'
-  >('catalogue');
+    'alphabetical' | 'all-az' | 'price-asc' | 'price-desc'
+  >('alphabetical');
   const [galleryTab, setGalleryTab] = useState<
     'all' | 'engineering' | 'design' | 'campus'
   >('all');
@@ -133,7 +134,9 @@ export default function App() {
 
   const durations = useMemo(() => {
     const set = new Set<string>();
-    ALL_COURSES.forEach((c) => set.add(c.duration));
+    ALL_COURSES.forEach((c) => {
+      if (c.duration) set.add(c.duration);
+    });
     return Array.from(set);
   }, []);
 
@@ -141,7 +144,7 @@ export default function App() {
     searchQuery.trim() !== '' ||
     activeCategoryFilter !== 'all' ||
     selectedDuration !== 'all' ||
-    sortBy !== 'catalogue';
+    sortBy !== 'alphabetical';
 
   const filteredCourses = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -156,23 +159,35 @@ export default function App() {
         course.title.toLowerCase().includes(q) ||
         course.description.toLowerCase().includes(q) ||
         course.category.toLowerCase().includes(q) ||
-        course.outline.some((o) => o.toLowerCase().includes(q));
+        course.outline.some((o) => o.toLowerCase().includes(q)) ||
+        (course.keywords &&
+          course.keywords.some((k) => k.toLowerCase().includes(q)));
       return matchesCat && matchesDur && matchesQuery;
     });
 
     if (sortBy === 'price-asc') {
-      return [...list].sort((a, b) => a.priceNumeric - b.priceNumeric);
+      return [...list].sort(
+        (a, b) =>
+          a.priceNumeric - b.priceNumeric ||
+          a.title.localeCompare(b.title, undefined, { sensitivity: 'base' })
+      );
     }
     if (sortBy === 'price-desc') {
-      return [...list].sort((a, b) => b.priceNumeric - a.priceNumeric);
+      return [...list].sort(
+        (a, b) =>
+          b.priceNumeric - a.priceNumeric ||
+          a.title.localeCompare(b.title, undefined, { sensitivity: 'base' })
+      );
     }
-    return list;
+    return sortCoursesAlphabetically(list);
   }, [searchQuery, activeCategoryFilter, selectedDuration, sortBy]);
 
   const coursesByCategory = useMemo(() => {
     const map: Record<string, CourseItem[]> = {};
     CATEGORY_INDEX.forEach((cat) => {
-      map[cat.name] = ALL_COURSES.filter((c) => c.category === cat.name);
+      map[cat.name] = sortCoursesAlphabetically(
+        ALL_COURSES.filter((c) => c.category === cat.name)
+      );
     });
     return map;
   }, []);
@@ -226,7 +241,10 @@ export default function App() {
   }, [allGalleryPhotos, galleryTab]);
 
   const selectedCourses = useMemo(
-    () => ALL_COURSES.filter((c) => selectedCourseIds.includes(c.id)),
+    () =>
+      sortCoursesAlphabetically(
+        ALL_COURSES.filter((c) => selectedCourseIds.includes(c.id))
+      ),
     [selectedCourseIds]
   );
   const subtotalTuition = useMemo(
@@ -237,8 +255,14 @@ export default function App() {
     selectedCourses.length >= 2 ? Math.round(subtotalTuition * 0.1) : 0;
   const estimatedTotal = subtotalTuition - bundleDiscount;
 
-  const coreCategories = CATEGORY_INDEX.slice(0, 3);
-  const advancedCategories = CATEGORY_INDEX.slice(3, 5);
+  const coreCategories = CATEGORY_INDEX.filter(
+    (c) =>
+      c.id !== 'professional-courses' && c.id !== 'advanced-technology-courses'
+  );
+  const advancedCategories = CATEGORY_INDEX.filter(
+    (c) =>
+      c.id === 'professional-courses' || c.id === 'advanced-technology-courses'
+  );
 
   const initialCategoryFromQuery = useMemo(() => {
     if (!location.search) return 'all';
@@ -845,7 +869,8 @@ export default function App() {
                       </span>
                     </div>
                     <h2 className="font-montserrat font-extrabold text-3xl sm:text-4xl text-[#121212]">
-                      Explore 5 Skill Categories &amp; 39 Programmes
+                      Explore {CATEGORY_INDEX.length} Skill Categories &amp;{' '}
+                      {ALL_COURSES.length} Programmes
                     </h2>
                   </div>
                   <p className="font-merriweather text-sm text-[#454545] max-w-[48ch]">
@@ -855,8 +880,8 @@ export default function App() {
                   </p>
                 </div>
 
-                {/* 5 Interactive Category Index Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-12">
+                {/* Interactive Category Index Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
                   {CATEGORY_INDEX.map((cat) => {
                     const isCatActive = activeCategoryFilter === cat.name;
                     return (
@@ -875,7 +900,8 @@ export default function App() {
                               style={{ backgroundColor: cat.accentColor }}
                             />
                             <span className="bg-[#f7941d] text-[#121212] font-montserrat font-bold text-xs px-2.5 py-1 rounded-xs tabular-nums">
-                              {cat.courseCount} courses
+                              {cat.courseCount}{' '}
+                              {cat.courseCount === 1 ? 'course' : 'courses'}
                             </span>
                           </div>
 
@@ -922,7 +948,7 @@ export default function App() {
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search all 39 courses by title, skill, or outline topic (e.g., Frontend, Python, UI/UX, Blender, Power BI, DevOps)..."
+                        placeholder={`Search all ${ALL_COURSES.length} courses by title, category, or keyword (e.g., Public Speaking, CapCut, Premiere Pro, Vibe Coding, AI, Python)...`}
                         className="w-full pl-11 pr-10 py-3 bg-white border border-[#e3e5f0] rounded-lg text-sm font-montserrat text-[#121212] placeholder:text-[#454545]/70 focus:outline-none focus:border-[#1c3f9c]"
                       />
                       {searchQuery && (
@@ -948,7 +974,10 @@ export default function App() {
                           aria-label="Filter by category"
                           className="bg-white border border-[#e3e5f0] rounded-lg px-3.5 py-2.5 text-xs font-montserrat font-bold text-[#121212] focus:outline-none focus:border-[#1c3f9c]"
                         >
-                          <option value="all">All 5 Categories (39)</option>
+                          <option value="all">
+                            All {CATEGORY_INDEX.length} Categories (
+                            {ALL_COURSES.length})
+                          </option>
                           {CATEGORY_INDEX.map((cat) => (
                             <option key={cat.id} value={cat.name}>
                               {cat.name} ({cat.courseCount})
@@ -976,7 +1005,8 @@ export default function App() {
                         onChange={(e) =>
                           setSortBy(
                             e.target.value as
-                              | 'catalogue'
+                              | 'alphabetical'
+                              | 'all-az'
                               | 'price-asc'
                               | 'price-desc'
                           )
@@ -984,7 +1014,10 @@ export default function App() {
                         aria-label="Sort courses"
                         className="bg-white border border-[#e3e5f0] rounded-lg px-3.5 py-2.5 text-xs font-montserrat font-bold text-[#121212] focus:outline-none focus:border-[#1c3f9c]"
                       >
-                        <option value="catalogue">Sort: Catalogue Order</option>
+                        <option value="alphabetical">
+                          Sort: Alphabetical (A–Z)
+                        </option>
+                        <option value="all-az">View: All Courses (A–Z)</option>
                         <option value="price-asc">Price: Low to High</option>
                         <option value="price-desc">Price: High to Low</option>
                       </select>
@@ -996,7 +1029,7 @@ export default function App() {
                             setSearchQuery('');
                             setActiveCategoryFilter('all');
                             setSelectedDuration('all');
-                            setSortBy('catalogue');
+                            setSortBy('alphabetical');
                           }}
                           className="px-3.5 py-2.5 text-xs font-montserrat font-bold text-[#e4265a] hover:bg-white rounded-lg border border-transparent hover:border-[#e3e5f0] transition-colors cursor-pointer whitespace-nowrap"
                         >
@@ -1010,8 +1043,17 @@ export default function App() {
                     <div className="mt-8 pt-8 border-t border-[#e3e5f0]">
                       <div className="flex items-center justify-between mb-6">
                         <h3 className="font-montserrat font-extrabold text-lg text-[#121212]">
-                          Filtered Catalogue Results ({filteredCourses.length}{' '}
-                          {filteredCourses.length === 1 ? 'course' : 'courses'})
+                          {activeCategoryFilter !== 'all'
+                            ? `${activeCategoryFilter} (${filteredCourses.length} ${
+                                filteredCourses.length === 1
+                                  ? 'course'
+                                  : 'courses'
+                              } · A–Z)`
+                            : `Filtered Catalogue Results (${filteredCourses.length} ${
+                                filteredCourses.length === 1
+                                  ? 'course'
+                                  : 'courses'
+                              } · A–Z)`}
                         </h3>
                       </div>
 
@@ -1026,11 +1068,11 @@ export default function App() {
                               setSearchQuery('');
                               setActiveCategoryFilter('all');
                               setSelectedDuration('all');
-                              setSortBy('catalogue');
+                              setSortBy('alphabetical');
                             }}
                             className="mt-4 px-5 py-2.5 bg-[#1c3f9c] text-white text-xs font-montserrat font-bold rounded-lg cursor-pointer"
                           >
-                            Show All 39 Courses
+                            Show All {ALL_COURSES.length} Courses
                           </button>
                         </div>
                       ) : (
@@ -1055,12 +1097,10 @@ export default function App() {
               </div>
             </section>
 
-            {/* 6. CORE COURSE LISTINGS: WEB DEVELOPMENT, DESIGNS & DATA/ACCOUNTING */}
+            {/* 6. CORE COURSE LISTINGS */}
             <div id="courses">
               {coreCategories.map((cat, catIdx) => {
                 const courses = coursesByCategory[cat.name] || [];
-                const leadCourse = courses[0];
-                const remainingCourses = courses.slice(1);
 
                 return (
                   <section
@@ -1088,32 +1128,15 @@ export default function App() {
                         </div>
 
                         <div className="font-montserrat text-xs sm:text-sm font-semibold text-[#454545] tabular-nums">
-                          {cat.courseCount} Certified Programmes · Hands-On
-                          Practical Track
+                          {cat.courseCount} Certified{' '}
+                          {cat.courseCount === 1 ? 'Programme' : 'Programmes'} ·
+                          Alphabetical Order (A–Z)
                         </div>
                       </div>
 
-                      {/* Lead Course (Full-Width Split Feature) */}
-                      {leadCourse && (
-                        <div className="mb-8">
-                          <CourseWebsiteCard
-                            course={leadCourse}
-                            isSelected={selectedCourseIds.includes(
-                              leadCourse.id
-                            )}
-                            isFeaturedSplit={true}
-                            onToggleCourse={handleToggleCourse}
-                            onInspectCourse={setInspectedCourse}
-                            onOpenLightbox={(imageUrl, caption, label) =>
-                              setLightboxData({ imageUrl, caption, label })
-                            }
-                          />
-                        </div>
-                      )}
-
-                      {/* Remaining Category Courses (2-Column Responsive Website Grid) */}
+                      {/* Category Courses (2-Column Responsive Website Grid, Sorted A–Z) */}
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        {remainingCourses.map((course) => (
+                        {courses.map((course) => (
                           <CourseWebsiteCard
                             key={course.id}
                             course={course}
@@ -1182,8 +1205,6 @@ export default function App() {
                 <div className="space-y-20">
                   {advancedCategories.map((cat) => {
                     const courses = coursesByCategory[cat.name] || [];
-                    const leadCourse = courses[0];
-                    const remainingCourses = courses.slice(1);
 
                     return (
                       <div key={cat.id} id={`cat-${cat.id}`}>
@@ -1203,30 +1224,13 @@ export default function App() {
                           </div>
 
                           <div className="font-montserrat text-xs sm:text-sm font-semibold text-[#454545] tabular-nums">
-                            {cat.courseCount} Programmes · Certified Upon
-                            Completion
+                            {cat.courseCount} Programmes · Alphabetical Order
+                            (A–Z)
                           </div>
                         </div>
 
-                        {leadCourse && (
-                          <div className="mb-8">
-                            <CourseWebsiteCard
-                              course={leadCourse}
-                              isSelected={selectedCourseIds.includes(
-                                leadCourse.id
-                              )}
-                              isFeaturedSplit={true}
-                              onToggleCourse={handleToggleCourse}
-                              onInspectCourse={setInspectedCourse}
-                              onOpenLightbox={(imageUrl, caption, label) =>
-                                setLightboxData({ imageUrl, caption, label })
-                              }
-                            />
-                          </div>
-                        )}
-
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                          {remainingCourses.map((course) => (
+                          {courses.map((course) => (
                             <CourseWebsiteCard
                               key={course.id}
                               course={course}
@@ -1505,7 +1509,9 @@ export default function App() {
                                   {c.title}
                                 </div>
                                 <div className="font-merriweather text-[11px] text-[#454545] mt-0.5 tabular-nums">
-                                  {c.category} · {c.duration}
+                                  {c.duration
+                                    ? `${c.category} · ${c.duration}`
+                                    : c.category}
                                 </div>
                               </div>
                               <div className="flex items-center gap-2.5 shrink-0">
@@ -1632,7 +1638,7 @@ export default function App() {
                     to="/courses"
                     className="hover:text-[#fdc12e] transition-colors"
                   >
-                    Courses (39)
+                    Courses ({ALL_COURSES.length})
                   </Link>
                 </li>
                 <li>
@@ -1691,7 +1697,8 @@ export default function App() {
                       onClick={() => handleSelectCategoryNav(cat.name, cat.id)}
                       className="hover:text-[#fdc12e] transition-colors cursor-pointer text-left"
                     >
-                      {cat.name} ({cat.courseCount} courses)
+                      {cat.name} ({cat.courseCount}{' '}
+                      {cat.courseCount === 1 ? 'course' : 'courses'})
                     </button>
                   </li>
                 ))}

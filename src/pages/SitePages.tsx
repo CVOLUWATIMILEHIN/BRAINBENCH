@@ -8,6 +8,7 @@ import {
   CourseItem,
   GALLERY_PAGE_18,
   GALLERY_PAGE_19,
+  sortCoursesAlphabetically,
 } from '../data/brochureData';
 import {
   SPARK_IT_EVENT_DATA,
@@ -114,7 +115,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({
                 to="/courses"
                 className="px-6 py-3.5 bg-[#f58d00] hover:bg-[#e07f00] text-[#061539] font-montserrat font-extrabold text-sm rounded-lg inline-flex items-center gap-2 transition-colors"
               >
-                <span>Explore 39 Courses</span>
+                <span>Explore {ALL_COURSES.length} Courses</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
@@ -249,16 +250,16 @@ export const AboutPage: React.FC<AboutPageProps> = ({
               WHAT WE DO
             </div>
             <h2 className="font-montserrat font-extrabold text-3xl sm:text-4xl text-[#121212] mt-2">
-              5 Core Skill Categories &amp; 2 Flagship Educational Events
+              {CATEGORY_INDEX.length} Core Skill Categories &amp; 2 Flagship Educational Events
             </h2>
             <p className="font-merriweather text-sm sm:text-base text-[#454545] mt-3 leading-relaxed">
-              We combine intensive technical training across 39 certified
+              We combine intensive technical training across {ALL_COURSES.length} certified
               courses with continuous community learning and academic innovation
               events.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
             {CATEGORY_INDEX.map((cat) => (
               <Link
                 key={cat.id}
@@ -510,7 +511,7 @@ export const ProgrammesPage: React.FC<ProgrammesPageProps> = ({
                 to="/courses"
                 className="px-6 py-3.5 bg-white/10 hover:bg-white/20 text-white font-montserrat font-bold text-sm rounded-lg inline-flex items-center gap-2 transition-colors"
               >
-                <span>Browse All 39 Courses</span>
+                <span>Browse All {ALL_COURSES.length} Courses</span>
               </Link>
             </div>
           </div>
@@ -649,7 +650,7 @@ export const ProgrammesPage: React.FC<ProgrammesPageProps> = ({
                 CERTIFIED TRAINING DEPARTMENTS
               </div>
               <h2 className="font-montserrat font-extrabold text-3xl sm:text-4xl text-[#121212] mt-2">
-                5 Career Specialisation Tracks (39 Courses)
+                {CATEGORY_INDEX.length} Career Specialisation Tracks ({ALL_COURSES.length} Courses)
               </h2>
             </div>
             <Link
@@ -663,8 +664,8 @@ export const ProgrammesPage: React.FC<ProgrammesPageProps> = ({
 
           <div className="space-y-6">
             {CATEGORY_INDEX.map((cat, idx) => {
-              const catCourses = ALL_COURSES.filter(
-                (c) => c.category === cat.name
+              const catCourses = sortCoursesAlphabetically(
+                ALL_COURSES.filter((c) => c.category === cat.name)
               );
               return (
                 <div
@@ -705,7 +706,7 @@ export const ProgrammesPage: React.FC<ProgrammesPageProps> = ({
                       >
                         <span>{c.title}</span>
                         <span className="text-[11px] font-normal text-[#454545] tabular-nums">
-                          ({c.duration} · {c.price})
+                          ({c.duration ? `${c.duration} · ${c.price}` : c.price})
                         </span>
                       </Link>
                     ))}
@@ -780,8 +781,8 @@ export const CoursesPage: React.FC<CoursesPageProps> = ({
     useState<string>(initialCategory);
   const [selectedDuration, setSelectedDuration] = useState<string>('all');
   const [sortBy, setSortBy] = useState<
-    'catalogue' | 'price-asc' | 'price-desc'
-  >('catalogue');
+    'alphabetical' | 'all-az' | 'price-asc' | 'price-desc'
+  >('alphabetical');
 
   React.useEffect(() => {
     if (initialCategory) {
@@ -791,7 +792,9 @@ export const CoursesPage: React.FC<CoursesPageProps> = ({
 
   const durations = useMemo(() => {
     const set = new Set<string>();
-    ALL_COURSES.forEach((c) => set.add(c.duration));
+    ALL_COURSES.forEach((c) => {
+      if (c.duration) set.add(c.duration);
+    });
     return Array.from(set);
   }, []);
 
@@ -799,7 +802,7 @@ export const CoursesPage: React.FC<CoursesPageProps> = ({
     searchQuery.trim() !== '' ||
     activeCategoryFilter !== 'all' ||
     selectedDuration !== 'all' ||
-    sortBy !== 'catalogue';
+    sortBy !== 'alphabetical';
 
   const filteredCourses = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -814,29 +817,44 @@ export const CoursesPage: React.FC<CoursesPageProps> = ({
         course.title.toLowerCase().includes(q) ||
         course.description.toLowerCase().includes(q) ||
         course.category.toLowerCase().includes(q) ||
-        course.outline.some((o) => o.toLowerCase().includes(q));
+        course.outline.some((o) => o.toLowerCase().includes(q)) ||
+        (course.keywords &&
+          course.keywords.some((k) => k.toLowerCase().includes(q)));
       return matchesCat && matchesDur && matchesQuery;
     });
 
     if (sortBy === 'price-asc') {
-      return [...list].sort((a, b) => a.priceNumeric - b.priceNumeric);
+      return [...list].sort(
+        (a, b) =>
+          a.priceNumeric - b.priceNumeric ||
+          a.title.localeCompare(b.title, undefined, { sensitivity: 'base' })
+      );
     }
     if (sortBy === 'price-desc') {
-      return [...list].sort((a, b) => b.priceNumeric - a.priceNumeric);
+      return [...list].sort(
+        (a, b) =>
+          b.priceNumeric - a.priceNumeric ||
+          a.title.localeCompare(b.title, undefined, { sensitivity: 'base' })
+      );
     }
-    return list;
+    return sortCoursesAlphabetically(list);
   }, [searchQuery, activeCategoryFilter, selectedDuration, sortBy]);
 
   const coursesByCategory = useMemo(() => {
     const map: Record<string, CourseItem[]> = {};
     CATEGORY_INDEX.forEach((cat) => {
-      map[cat.name] = ALL_COURSES.filter((c) => c.category === cat.name);
+      map[cat.name] = sortCoursesAlphabetically(
+        ALL_COURSES.filter((c) => c.category === cat.name)
+      );
     });
     return map;
   }, []);
 
   const selectedCourses = useMemo(
-    () => ALL_COURSES.filter((c) => selectedCourseIds.includes(c.id)),
+    () =>
+      sortCoursesAlphabetically(
+        ALL_COURSES.filter((c) => selectedCourseIds.includes(c.id))
+      ),
     [selectedCourseIds]
   );
   const subtotalTuition = useMemo(
@@ -876,7 +894,7 @@ export const CoursesPage: React.FC<CoursesPageProps> = ({
               <div className="inline-flex items-center gap-2 mb-2">
                 <span className="w-6 h-[2.5px] bg-[#f58220] rounded-full" />
                 <span className="font-montserrat font-extrabold text-xs uppercase tracking-[0.2em] text-[#1c3f9c]">
-                  5 SPECIALISED TRACKS
+                  {CATEGORY_INDEX.length} SPECIALISED TRACKS
                 </span>
               </div>
               <h2 className="font-montserrat font-extrabold text-2xl sm:text-3xl text-[#0b1c48]">
@@ -885,11 +903,12 @@ export const CoursesPage: React.FC<CoursesPageProps> = ({
             </div>
             <p className="font-merriweather text-xs sm:text-sm text-[#454545] max-w-md">
               Select a skill category below to filter the 2026 price list or
-              explore all 39 certified courses across our 5 departments.
+              explore all {ALL_COURSES.length} certified courses across our{' '}
+              {CATEGORY_INDEX.length} departments.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {CATEGORY_INDEX.map((cat) => {
               const isCatActive = activeCategoryFilter === cat.name;
               return (
@@ -911,7 +930,8 @@ export const CoursesPage: React.FC<CoursesPageProps> = ({
                         style={{ backgroundColor: cat.accentColor }}
                       />
                       <span className="bg-[#f7941d] text-[#121212] font-montserrat font-bold text-xs px-2.5 py-1 rounded-xs tabular-nums">
-                        {cat.courseCount} courses
+                        {cat.courseCount}{' '}
+                        {cat.courseCount === 1 ? 'course' : 'courses'}
                       </span>
                     </div>
 
@@ -948,199 +968,200 @@ export const CoursesPage: React.FC<CoursesPageProps> = ({
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search all 39 courses by title, skill, or outline topic (e.g., Frontend, Python, UI/UX, Blender, Power BI, DevOps)..."
+                    placeholder={`Search all ${ALL_COURSES.length} courses by title, category, or keyword (e.g., Public Speaking, CapCut, Premiere Pro, Vibe Coding, AI, Python)...`}
                     className="w-full pl-11 pr-10 py-3 bg-white border border-[#e3e5f0] rounded-lg text-sm font-montserrat text-[#121212] placeholder:text-[#454545]/70 focus:outline-none focus:border-[#1c3f9c]"
                   />
-                {searchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#454545] hover:text-[#121212] cursor-pointer"
-                    aria-label="Clear search query"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#454545] hover:text-[#121212] cursor-pointer"
+                      aria-label="Clear search query"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
 
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <SlidersHorizontal className="w-4 h-4 text-[#1c3f9c] shrink-0" />
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <SlidersHorizontal className="w-4 h-4 text-[#1c3f9c] shrink-0" />
+                    <select
+                      value={activeCategoryFilter}
+                      onChange={(e) => setActiveCategoryFilter(e.target.value)}
+                      aria-label="Filter by category"
+                      className="bg-white border border-[#e3e5f0] rounded-lg px-3.5 py-2.5 text-xs font-montserrat font-bold text-[#121212] focus:outline-none focus:border-[#1c3f9c]"
+                    >
+                      <option value="all">
+                        All {CATEGORY_INDEX.length} Categories (
+                        {ALL_COURSES.length})
+                      </option>
+                      {CATEGORY_INDEX.map((cat) => (
+                        <option key={cat.id} value={cat.name}>
+                          {cat.name} ({cat.courseCount})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
                   <select
-                    value={activeCategoryFilter}
-                    onChange={(e) => setActiveCategoryFilter(e.target.value)}
-                    aria-label="Filter by category"
+                    value={selectedDuration}
+                    onChange={(e) => setSelectedDuration(e.target.value)}
+                    aria-label="Filter by course duration"
                     className="bg-white border border-[#e3e5f0] rounded-lg px-3.5 py-2.5 text-xs font-montserrat font-bold text-[#121212] focus:outline-none focus:border-[#1c3f9c]"
                   >
-                    <option value="all">All 5 Categories (39)</option>
-                    {CATEGORY_INDEX.map((cat) => (
-                      <option key={cat.id} value={cat.name}>
-                        {cat.name} ({cat.courseCount})
+                    <option value="all">All Durations</option>
+                    {durations.map((d) => (
+                      <option key={d} value={d}>
+                        Duration: {d}
                       </option>
                     ))}
                   </select>
-                </div>
 
-                <select
-                  value={selectedDuration}
-                  onChange={(e) => setSelectedDuration(e.target.value)}
-                  aria-label="Filter by course duration"
-                  className="bg-white border border-[#e3e5f0] rounded-lg px-3.5 py-2.5 text-xs font-montserrat font-bold text-[#121212] focus:outline-none focus:border-[#1c3f9c]"
-                >
-                  <option value="all">All Durations</option>
-                  {durations.map((d) => (
-                    <option key={d} value={d}>
-                      Duration: {d}
-                    </option>
-                  ))}
-                </select>
-
-                <select
-                  value={sortBy}
-                  onChange={(e) =>
-                    setSortBy(
-                      e.target.value as 'catalogue' | 'price-asc' | 'price-desc'
-                    )
-                  }
-                  aria-label="Sort courses"
-                  className="bg-white border border-[#e3e5f0] rounded-lg px-3.5 py-2.5 text-xs font-montserrat font-bold text-[#121212] focus:outline-none focus:border-[#1c3f9c]"
-                >
-                  <option value="catalogue">Sort: Catalogue Order</option>
-                  <option value="price-asc">Price: Low to High</option>
-                  <option value="price-desc">Price: High to Low</option>
-                </select>
-
-                {isFiltering && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSearchQuery('');
-                      setActiveCategoryFilter('all');
-                      setSelectedDuration('all');
-                      setSortBy('catalogue');
-                    }}
-                    className="px-3.5 py-2.5 text-xs font-montserrat font-bold text-[#e4265a] hover:bg-white rounded-lg border border-transparent hover:border-[#e3e5f0] transition-colors cursor-pointer whitespace-nowrap"
+                  <select
+                    value={sortBy}
+                    onChange={(e) =>
+                      setSortBy(
+                        e.target.value as
+                          | 'alphabetical'
+                          | 'all-az'
+                          | 'price-asc'
+                          | 'price-desc'
+                      )
+                    }
+                    aria-label="Sort courses"
+                    className="bg-white border border-[#e3e5f0] rounded-lg px-3.5 py-2.5 text-xs font-montserrat font-bold text-[#121212] focus:outline-none focus:border-[#1c3f9c]"
                   >
-                    Reset
-                  </button>
-                )}
-              </div>
-            </div>
+                    <option value="alphabetical">
+                      Sort: Alphabetical (A–Z)
+                    </option>
+                    <option value="all-az">View: All Courses (A–Z)</option>
+                    <option value="price-asc">Price: Low to High</option>
+                    <option value="price-desc">Price: High to Low</option>
+                  </select>
 
-            {isFiltering && (
-              <div className="mt-8 pt-8 border-t border-[#e3e5f0]">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="font-montserrat font-extrabold text-lg text-[#121212]">
-                    Filtered Catalogue Results ({filteredCourses.length}{' '}
-                    {filteredCourses.length === 1 ? 'course' : 'courses'})
-                  </h3>
-                </div>
-
-                {filteredCourses.length === 0 ? (
-                  <div className="bg-white rounded-xl border border-[#e3e5f0] p-12 text-center">
-                    <p className="font-montserrat font-bold text-base text-[#121212]">
-                      No courses match your current filter criteria
-                    </p>
+                  {isFiltering && (
                     <button
                       type="button"
                       onClick={() => {
                         setSearchQuery('');
                         setActiveCategoryFilter('all');
                         setSelectedDuration('all');
-                        setSortBy('catalogue');
+                        setSortBy('alphabetical');
                       }}
-                      className="mt-4 px-5 py-2.5 bg-[#1c3f9c] text-white text-xs font-montserrat font-bold rounded-lg cursor-pointer"
+                      className="px-3.5 py-2.5 text-xs font-montserrat font-bold text-[#e4265a] hover:bg-white rounded-lg border border-transparent hover:border-[#e3e5f0] transition-colors cursor-pointer whitespace-nowrap"
                     >
-                      Show All 39 Courses
+                      Reset
                     </button>
+                  )}
+                </div>
+              </div>
+
+              {isFiltering && (
+                <div className="mt-8 pt-8 border-t border-[#e3e5f0]">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="font-montserrat font-extrabold text-lg text-[#121212]">
+                      {activeCategoryFilter !== 'all'
+                        ? `${activeCategoryFilter} (${filteredCourses.length} ${
+                            filteredCourses.length === 1 ? 'course' : 'courses'
+                          } · A–Z)`
+                        : `Course Catalogue Results (${filteredCourses.length} ${
+                            filteredCourses.length === 1 ? 'course' : 'courses'
+                          } · A–Z)`}
+                    </h3>
                   </div>
-                ) : (
+
+                  {filteredCourses.length === 0 ? (
+                    <div className="bg-white rounded-xl border border-[#e3e5f0] p-12 text-center">
+                      <p className="font-montserrat font-bold text-base text-[#121212]">
+                        No courses match your current filter criteria
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSearchQuery('');
+                          setActiveCategoryFilter('all');
+                          setSelectedDuration('all');
+                          setSortBy('alphabetical');
+                        }}
+                        className="mt-4 px-5 py-2.5 bg-[#1c3f9c] text-white text-xs font-montserrat font-bold rounded-lg cursor-pointer"
+                      >
+                        Show All {ALL_COURSES.length} Courses
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                      {filteredCourses.map((course) => (
+                        <CourseWebsiteCard
+                          key={course.id}
+                          course={course}
+                          isSelected={selectedCourseIds.includes(course.id)}
+                          onToggleCourse={onToggleCourse}
+                          onInspectCourse={onInspectCourse}
+                          onOpenLightbox={onOpenLightbox}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* Full Category Sections (Each Category Sorted Alphabetically A–Z) */}
+        {!isFiltering &&
+          CATEGORY_INDEX.map((cat, catIdx) => {
+            const courses = coursesByCategory[cat.name] || [];
+
+            return (
+              <section
+                key={cat.id}
+                id={`cat-${cat.id}`}
+                className={`w-full py-16 lg:py-24 border-b border-[#e3e5f0] ${
+                  catIdx % 2 === 1 ? 'bg-[#F8F9FC]' : 'bg-white'
+                }`}
+              >
+                <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-20 2xl:px-24">
+                  <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10 pb-6 border-b border-[#e3e5f0]">
+                    <div>
+                      <div
+                        className="inline-flex items-center px-7 py-3 rounded-lg"
+                        style={{
+                          background:
+                            'linear-gradient(90deg, #f58220 0%, #fdc12e 100%)',
+                        }}
+                      >
+                        <h2 className="font-montserrat font-extrabold text-2xl sm:text-3xl text-[#121212] leading-none">
+                          {cat.name}
+                        </h2>
+                      </div>
+                    </div>
+
+                    <div className="font-montserrat text-xs sm:text-sm font-semibold text-[#454545] tabular-nums">
+                      {cat.courseCount} Certified{' '}
+                      {cat.courseCount === 1 ? 'Programme' : 'Programmes'} ·
+                      Alphabetical Order (A–Z)
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {filteredCourses.map((course) => (
+                    {courses.map((course) => (
                       <CourseWebsiteCard
                         key={course.id}
                         course={course}
                         isSelected={selectedCourseIds.includes(course.id)}
+                        isFeaturedSplit={false}
                         onToggleCourse={onToggleCourse}
                         onInspectCourse={onInspectCourse}
                         onOpenLightbox={onOpenLightbox}
                       />
                     ))}
                   </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* Full Category Sections */}
-      {!isFiltering &&
-        CATEGORY_INDEX.map((cat, catIdx) => {
-          const courses = coursesByCategory[cat.name] || [];
-          const leadCourse = courses[0];
-          const remainingCourses = courses.slice(1);
-
-          return (
-            <section
-              key={cat.id}
-              id={`cat-${cat.id}`}
-              className={`w-full py-16 lg:py-24 border-b border-[#e3e5f0] ${
-                catIdx % 2 === 1 ? 'bg-[#F8F9FC]' : 'bg-white'
-              }`}
-            >
-              <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-20 2xl:px-24">
-                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10 pb-6 border-b border-[#e3e5f0]">
-                  <div>
-                    <div
-                      className="inline-flex items-center px-7 py-3 rounded-lg"
-                      style={{
-                        background:
-                          'linear-gradient(90deg, #f58220 0%, #fdc12e 100%)',
-                      }}
-                    >
-                      <h2 className="font-montserrat font-extrabold text-2xl sm:text-3xl text-[#121212] leading-none">
-                        {cat.name}
-                      </h2>
-                    </div>
-                  </div>
-
-                  <div className="font-montserrat text-xs sm:text-sm font-semibold text-[#454545] tabular-nums">
-                    {cat.courseCount} Certified Programmes · Hands-On Practical
-                    Track
-                  </div>
                 </div>
-
-                {leadCourse && (
-                  <div className="mb-8">
-                    <CourseWebsiteCard
-                      course={leadCourse}
-                      isSelected={selectedCourseIds.includes(leadCourse.id)}
-                      isFeaturedSplit={true}
-                      onToggleCourse={onToggleCourse}
-                      onInspectCourse={onInspectCourse}
-                      onOpenLightbox={onOpenLightbox}
-                    />
-                  </div>
-                )}
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  {remainingCourses.map((course) => (
-                    <CourseWebsiteCard
-                      key={course.id}
-                      course={course}
-                      isSelected={selectedCourseIds.includes(course.id)}
-                      isFeaturedSplit={false}
-                      onToggleCourse={onToggleCourse}
-                      onInspectCourse={onInspectCourse}
-                      onOpenLightbox={onOpenLightbox}
-                    />
-                  ))}
-                </div>
-              </div>
-            </section>
-          );
-        })}
+              </section>
+            );
+          })}
       </div>
 
       {/* Tuition Estimator & Enrolment Footer Section */}
@@ -1218,7 +1239,9 @@ export const CoursesPage: React.FC<CoursesPageProps> = ({
                             {c.title}
                           </div>
                           <div className="font-merriweather text-[11px] text-[#454545] mt-0.5 tabular-nums">
-                            {c.category} · {c.duration}
+                            {c.duration
+                              ? `${c.category} · ${c.duration}`
+                              : c.category}
                           </div>
                         </div>
                         <div className="flex items-center gap-2.5 shrink-0">

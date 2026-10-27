@@ -61,15 +61,21 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
         {/* Body */}
         <div className="p-6 space-y-6">
           {/* Key Metrics Strip */}
-          <div className="grid grid-cols-3 gap-3 bg-[#f8f9fc] border border-[#e3e5f0] p-4">
-            <div>
-              <div className="text-[10px] font-montserrat font-bold text-[#454545] uppercase">
-                Course Duration
+          <div
+            className={`grid ${
+              course.duration ? 'grid-cols-3' : 'grid-cols-2'
+            } gap-3 bg-[#f8f9fc] border border-[#e3e5f0] p-4`}
+          >
+            {course.duration && (
+              <div>
+                <div className="text-[10px] font-montserrat font-bold text-[#454545] uppercase">
+                  Course Duration
+                </div>
+                <div className="font-montserrat font-extrabold text-sm sm:text-base text-[#121212] mt-0.5 tabular-nums">
+                  {course.duration}
+                </div>
               </div>
-              <div className="font-montserrat font-extrabold text-sm sm:text-base text-[#121212] mt-0.5 tabular-nums">
-                {course.duration}
-              </div>
-            </div>
+            )}
             <div>
               <div className="text-[10px] font-montserrat font-bold text-[#454545] uppercase">
                 2026 Tuition Fee
@@ -80,45 +86,49 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
             </div>
             <div>
               <div className="text-[10px] font-montserrat font-bold text-[#454545] uppercase">
-                Certification
+                Category
               </div>
               <div className="font-montserrat font-extrabold text-sm sm:text-base text-[#121212] mt-0.5">
-                100% Certified
+                {course.category}
               </div>
             </div>
           </div>
 
           {/* Description */}
-          <div>
-            <h3 className="font-montserrat font-extrabold text-xs uppercase tracking-wider text-[#174da8]">
-              Programme Overview
-            </h3>
-            <p className="font-merriweather text-sm text-[#121212] leading-relaxed mt-2">
-              {course.description}
-            </p>
-          </div>
+          {course.description && (
+            <div>
+              <h3 className="font-montserrat font-extrabold text-xs uppercase tracking-wider text-[#174da8]">
+                Programme Overview
+              </h3>
+              <p className="font-merriweather text-sm text-[#121212] leading-relaxed mt-2">
+                {course.description}
+              </p>
+            </div>
+          )}
 
           {/* Course Outline Modules */}
-          <div>
-            <h3 className="font-montserrat font-extrabold text-xs uppercase tracking-wider text-[#174da8]">
-              Curriculum &amp; Practical Modules
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-3">
-              {course.outline.map((item, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center gap-2.5 p-2.5 bg-[#f8f9fc] border border-[#e3e5f0]"
-                >
-                  <span className="font-mono-tabular text-xs font-bold text-[#1c3f9c]">
-                    0{idx + 1}.
-                  </span>
-                  <span className="font-merriweather text-xs text-[#121212]">
-                    {item}
-                  </span>
-                </div>
-              ))}
+          {course.outline && course.outline.length > 0 && (
+            <div>
+              <h3 className="font-montserrat font-extrabold text-xs uppercase tracking-wider text-[#174da8]">
+                Curriculum &amp; Practical Modules
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-3">
+                {course.outline.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-2.5 p-2.5 bg-[#f8f9fc] border border-[#e3e5f0]"
+                  >
+                    <span className="font-mono-tabular text-xs font-bold text-[#1c3f9c]">
+                      0{idx + 1}.
+                    </span>
+                    <span className="font-merriweather text-xs text-[#121212]">
+                      {item}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Delivery Info */}
           <div className="flex flex-wrap items-center gap-6 pt-2 text-xs font-merriweather text-[#454545]">
@@ -367,9 +377,11 @@ export const EnrolModal: React.FC<EnrolModalProps> = ({
                     >
                       <span className="font-semibold text-[#121212]">
                         {c.title}{' '}
-                        <span className="text-[#454545] font-normal">
-                          ({c.duration})
-                        </span>
+                        {c.duration && (
+                          <span className="text-[#454545] font-normal">
+                            ({c.duration})
+                          </span>
+                        )}
                       </span>
                       <span className="font-bold text-[#174da8] tabular-nums">
                         {c.price}
@@ -391,7 +403,8 @@ export const EnrolModal: React.FC<EnrolModalProps> = ({
                 >
                   {ALL_COURSES.map((c) => (
                     <option key={c.id} value={c.id}>
-                      {c.category} — {c.title} ({c.duration} · {c.price})
+                      {c.title} — {c.category} ({c.duration ? `${c.duration} · ` : ''}
+                      {c.price})
                     </option>
                   ))}
                 </select>

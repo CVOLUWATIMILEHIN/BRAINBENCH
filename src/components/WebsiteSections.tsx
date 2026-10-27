@@ -135,6 +135,11 @@ export const CourseWebsiteCard: React.FC<CourseCardProps> = ({
   const leftCol = course.outline.slice(0, midPoint);
   const rightCol = course.outline.slice(midPoint);
 
+  const hasDescription = Boolean(course.description && course.description.trim());
+  const hasOutline = Boolean(course.outline && course.outline.length > 0);
+  const hasDuration = Boolean(course.duration && course.duration.trim());
+  const isCompactCard = !hasOutline;
+
   const isWhiteBg = course.bg.toLowerCase() === '#ffffff';
   const isOrangeBg =
     course.bg.toLowerCase() === '#f58220' ||
@@ -145,13 +150,17 @@ export const CourseWebsiteCard: React.FC<CourseCardProps> = ({
       onClick={() =>
         onOpenLightbox(
           course.imageUrl,
-          `${course.title} — ${course.description}`,
+          course.description
+            ? `${course.title} — ${course.description}`
+            : `${course.title} (${course.category} · ${course.price})`,
           course.category
         )
       }
       className={`group relative bg-[#dbe5fa] overflow-hidden cursor-pointer shrink-0 ${
         isFeaturedSplit
           ? 'w-full sm:w-[300px] md:w-[360px] lg:w-[44%] xl:w-[45%] aspect-[4/3] sm:aspect-auto sm:min-h-[380px] lg:min-h-[420px]'
+          : isCompactCard
+          ? 'w-full sm:w-[230px] xl:w-[260px] aspect-[4/3] sm:aspect-auto sm:min-h-[240px]'
           : 'w-full sm:w-[230px] xl:w-[260px] aspect-[4/3] sm:aspect-auto sm:min-h-[330px]'
       }`}
     >
@@ -245,97 +254,116 @@ export const CourseWebsiteCard: React.FC<CourseCardProps> = ({
           </button>
         </div>
 
-        {/* Course Description */}
-        <div className={isFeaturedSplit ? 'mt-6' : 'mt-4'}>
-          <h4
-            className={`font-montserrat font-extrabold tracking-wider uppercase ${
-              isFeaturedSplit ? 'text-xs sm:text-sm' : 'text-xs'
+        {/* Category Badge */}
+        <div className="mt-3">
+          <span
+            className={`inline-flex items-center px-2.5 py-1 rounded font-montserrat font-bold text-[11px] uppercase tracking-wider ${
+              isOrangeBg
+                ? 'bg-[#121212]/15 text-[#121212]'
+                : isWhiteBg
+                ? 'bg-[#174da8]/10 text-[#174da8]'
+                : 'bg-white/15 text-white'
             }`}
-            style={{ color: course.descLabelColor }}
           >
-            COURSE DESCRIPTION
-          </h4>
-          <p
-            className={`font-merriweather leading-relaxed mt-2 ${
-              isFeaturedSplit
-                ? 'text-base sm:text-[17px] lg:text-[18px] font-normal'
-                : 'text-xs sm:text-sm'
-            }`}
-            style={{ color: course.textColor }}
-          >
-            {course.description}
-          </p>
+            {course.category}
+          </span>
         </div>
+
+        {/* Course Description */}
+        {hasDescription && (
+          <div className={isFeaturedSplit ? 'mt-5' : 'mt-4'}>
+            <h4
+              className={`font-montserrat font-extrabold tracking-wider uppercase ${
+                isFeaturedSplit ? 'text-xs sm:text-sm' : 'text-xs'
+              }`}
+              style={{ color: course.descLabelColor }}
+            >
+              COURSE DESCRIPTION
+            </h4>
+            <p
+              className={`font-merriweather leading-relaxed mt-2 ${
+                isFeaturedSplit
+                  ? 'text-base sm:text-[17px] lg:text-[18px] font-normal'
+                  : 'text-xs sm:text-sm'
+              }`}
+              style={{ color: course.textColor }}
+            >
+              {course.description}
+            </p>
+          </div>
+        )}
 
         {/* Course Outline */}
-        <div className={isFeaturedSplit ? 'mt-6' : 'mt-4'}>
-          <h4
-            className={`font-montserrat font-extrabold tracking-wider uppercase ${
-              isFeaturedSplit ? 'text-xs sm:text-sm' : 'text-xs'
-            }`}
-            style={{ color: course.descLabelColor }}
-          >
-            COURSE OUTLINE
-          </h4>
+        {hasOutline && (
+          <div className={isFeaturedSplit ? 'mt-6' : 'mt-4'}>
+            <h4
+              className={`font-montserrat font-extrabold tracking-wider uppercase ${
+                isFeaturedSplit ? 'text-xs sm:text-sm' : 'text-xs'
+              }`}
+              style={{ color: course.descLabelColor }}
+            >
+              COURSE OUTLINE
+            </h4>
 
-          {isFeaturedSplit ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-              {course.outline.map((item, idx) => (
-                <div
-                  key={idx}
-                  className={`flex items-center gap-3 px-4 py-2.5 rounded-lg border ${
-                    isOrangeBg
-                      ? 'bg-[#121212]/15 border-white/20'
-                      : isWhiteBg
-                      ? 'bg-[#f8f9fc] border-[#e3e5f0]'
-                      : 'bg-white/10 border-white/15'
-                  }`}
-                >
-                  <span
-                    className={`w-2 h-2 rounded-full shrink-0 ${
+            {isFeaturedSplit ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                {course.outline.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg border ${
                       isOrangeBg
-                        ? 'bg-[#121212]'
+                        ? 'bg-[#121212]/15 border-white/20'
                         : isWhiteBg
-                        ? 'bg-[#174da8]'
-                        : 'bg-[#fdc12e]'
+                        ? 'bg-[#f8f9fc] border-[#e3e5f0]'
+                        : 'bg-white/10 border-white/15'
                     }`}
-                  />
-                  <span
-                    className="font-montserrat font-semibold text-sm sm:text-[15px] leading-snug"
-                    style={{ color: course.textColor }}
                   >
-                    {item}
-                  </span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 mt-2">
-              <ul className="space-y-1.5">
-                {leftCol.map((item, idx) => (
-                  <li
-                    key={idx}
-                    className="font-merriweather text-xs sm:text-[13.5px] leading-snug"
-                    style={{ color: course.textColor }}
-                  >
-                    • {item}
-                  </li>
+                    <span
+                      className={`w-2 h-2 rounded-full shrink-0 ${
+                        isOrangeBg
+                          ? 'bg-[#121212]'
+                          : isWhiteBg
+                          ? 'bg-[#174da8]'
+                          : 'bg-[#fdc12e]'
+                      }`}
+                    />
+                    <span
+                      className="font-montserrat font-semibold text-sm sm:text-[15px] leading-snug"
+                      style={{ color: course.textColor }}
+                    >
+                      {item}
+                    </span>
+                  </div>
                 ))}
-              </ul>
-              <ul className="space-y-1.5">
-                {rightCol.map((item, idx) => (
-                  <li
-                    key={idx}
-                    className="font-merriweather text-xs sm:text-[13.5px] leading-snug"
-                    style={{ color: course.textColor }}
-                  >
-                    • {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 mt-2">
+                <ul className="space-y-1.5">
+                  {leftCol.map((item, idx) => (
+                    <li
+                      key={idx}
+                      className="font-merriweather text-xs sm:text-[13.5px] leading-snug"
+                      style={{ color: course.textColor }}
+                    >
+                      • {item}
+                    </li>
+                  ))}
+                </ul>
+                <ul className="space-y-1.5">
+                  {rightCol.map((item, idx) => (
+                    <li
+                      key={idx}
+                      className="font-merriweather text-xs sm:text-[13.5px] leading-snug"
+                      style={{ color: course.textColor }}
+                    >
+                      • {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Bottom Row: Duration and Price Box + Full Details Link */}
@@ -349,31 +377,33 @@ export const CourseWebsiteCard: React.FC<CourseCardProps> = ({
             isFeaturedSplit ? 'px-5 py-3 gap-7' : 'px-3.5 py-2 gap-5'
           }`}
         >
-          <div className="flex items-center gap-3">
-            <span
-              className={`w-1.5 bg-[#174da8] rounded-xs shrink-0 ${
-                isFeaturedSplit ? 'h-9' : 'h-7'
-              }`}
-            />
-            <div>
-              <div
-                className={`font-montserrat font-semibold leading-none text-[#454545] uppercase ${
-                  isFeaturedSplit ? 'text-[10px]' : 'text-[9px]'
+          {hasDuration && (
+            <div className="flex items-center gap-3">
+              <span
+                className={`w-1.5 bg-[#174da8] rounded-xs shrink-0 ${
+                  isFeaturedSplit ? 'h-9' : 'h-7'
                 }`}
-              >
-                COURSE DURATION:
-              </div>
-              <div
-                className={`font-montserrat font-extrabold leading-none text-[#121212] mt-1 tabular-nums whitespace-nowrap ${
-                  isFeaturedSplit
-                    ? 'text-sm sm:text-base lg:text-lg'
-                    : 'text-xs sm:text-sm'
-                }`}
-              >
-                {course.duration}
+              />
+              <div>
+                <div
+                  className={`font-montserrat font-semibold leading-none text-[#454545] uppercase ${
+                    isFeaturedSplit ? 'text-[10px]' : 'text-[9px]'
+                  }`}
+                >
+                  COURSE DURATION:
+                </div>
+                <div
+                  className={`font-montserrat font-extrabold leading-none text-[#121212] mt-1 tabular-nums whitespace-nowrap ${
+                    isFeaturedSplit
+                      ? 'text-sm sm:text-base lg:text-lg'
+                      : 'text-xs sm:text-sm'
+                  }`}
+                >
+                  {course.duration}
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           <div className="flex items-center gap-3">
             <span
