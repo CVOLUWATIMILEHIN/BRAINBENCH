@@ -5,6 +5,7 @@ import React, {
   useEffect,
   useState,
 } from 'react';
+import { sanitizeDomId, sanitizeInternalPath } from './utils/security';
 
 export interface RouteLocation {
   pathname: string;
@@ -113,18 +114,20 @@ export const RouterProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     if (location.hash) {
-      const targetId = location.hash.replace(/^#/, '');
-      window.requestAnimationFrame(() => {
-        const el = document.getElementById(targetId);
-        if (el) {
-          const headerOffset = 76;
-          const pos = el.getBoundingClientRect().top + window.scrollY;
-          window.scrollTo({
-            top: Math.max(0, pos - headerOffset),
-            behavior: 'smooth',
-          });
-        }
-      });
+      const targetId = sanitizeDomId(location.hash);
+      if (targetId) {
+        window.requestAnimationFrame(() => {
+          const el = document.getElementById(targetId);
+          if (el) {
+            const headerOffset = 76;
+            const pos = el.getBoundingClientRect().top + window.scrollY;
+            window.scrollTo({
+              top: Math.max(0, pos - headerOffset),
+              behavior: 'smooth',
+            });
+          }
+        });
+      }
     } else {
       window.scrollTo({ top: 0, behavior: 'auto' });
     }
@@ -133,7 +136,8 @@ export const RouterProvider: React.FC<{ children: React.ReactNode }> = ({
   const navigate = useCallback(
     (to: string, options?: { replace?: boolean }) => {
       if (typeof window === 'undefined') return;
-      const url = new URL(to, window.location.origin);
+      const safePath = sanitizeInternalPath(to);
+      const url = new URL(safePath, window.location.origin);
       const nextLoc: RouteLocation = {
         pathname: normalizePathname(url.pathname),
         search: url.search || '',
@@ -149,18 +153,20 @@ export const RouterProvider: React.FC<{ children: React.ReactNode }> = ({
       setLocation(nextLoc);
 
       if (nextLoc.hash) {
-        const targetId = nextLoc.hash.replace(/^#/, '');
-        window.requestAnimationFrame(() => {
-          const el = document.getElementById(targetId);
-          if (el) {
-            const headerOffset = 76;
-            const pos = el.getBoundingClientRect().top + window.scrollY;
-            window.scrollTo({
-              top: Math.max(0, pos - headerOffset),
-              behavior: 'smooth',
-            });
-          }
-        });
+        const targetId = sanitizeDomId(nextLoc.hash);
+        if (targetId) {
+          window.requestAnimationFrame(() => {
+            const el = document.getElementById(targetId);
+            if (el) {
+              const headerOffset = 76;
+              const pos = el.getBoundingClientRect().top + window.scrollY;
+              window.scrollTo({
+                top: Math.max(0, pos - headerOffset),
+                behavior: 'smooth',
+              });
+            }
+          });
+        }
       }
     },
     []
@@ -194,6 +200,7 @@ export const Link: React.FC<LinkProps> = ({
   ...rest
 }) => {
   const { navigate } = useRouter();
+  const safeHref = sanitizeInternalPath(to);
 
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     if (onClick) {
@@ -211,11 +218,16 @@ export const Link: React.FC<LinkProps> = ({
       return;
     }
     e.preventDefault();
-    navigate(to, { replace });
+    navigate(safeHref, { replace });
   };
 
   return (
-    <a href={to} onClick={handleClick} {...rest}>
+    <a
+      href={safeHref}
+      onClick={handleClick}
+      rel={rest.target === '_blank' ? 'noopener noreferrer' : rest.rel}
+      {...rest}
+    >
       {children}
     </a>
   );

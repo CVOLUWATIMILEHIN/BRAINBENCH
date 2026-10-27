@@ -43,6 +43,7 @@ import {
   ProgrammesPage,
 } from './pages/SitePages';
 import { Link, useRouter } from './router';
+import { sanitizeDomId, sanitizeSearchQuery } from './utils/security';
 import {
   ArrowRight,
   Calculator,
@@ -102,15 +103,17 @@ export default function App() {
 
   const scrollToSection = (sectionId: string) => {
     setMobileMenuOpen(false);
+    const safeId = sanitizeDomId(sectionId);
+    if (!safeId) return;
     if (location.pathname !== '/') {
-      navigate(`/#${sectionId}`);
+      navigate(`/#${safeId}`);
       return;
     }
-    if (sectionId === 'hero') {
+    if (safeId === 'hero') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
-    const el = document.getElementById(sectionId);
+    const el = document.getElementById(safeId);
     if (el) {
       const headerOffset = 76;
       const elementPosition = el.getBoundingClientRect().top + window.scrollY;
@@ -946,8 +949,13 @@ export default function App() {
                       <Search className="w-4 h-4 text-[#454545] absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                       <input
                         type="text"
+                        maxLength={100}
                         value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onChange={(e) =>
+                          setSearchQuery(
+                            sanitizeSearchQuery(e.target.value, 100)
+                          )
+                        }
                         placeholder={`Search all ${ALL_COURSES.length} courses by title, category, or keyword (e.g., Public Speaking, CapCut, Premiere Pro, Vibe Coding, AI, Python)...`}
                         className="w-full pl-11 pr-10 py-3 bg-white border border-[#e3e5f0] rounded-lg text-sm font-montserrat text-[#121212] placeholder:text-[#454545]/70 focus:outline-none focus:border-[#1c3f9c]"
                       />

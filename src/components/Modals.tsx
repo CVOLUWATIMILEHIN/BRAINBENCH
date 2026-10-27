@@ -1,7 +1,21 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ALL_COURSES, CourseItem } from '../data/brochureData';
 import { ResilientImage } from './WebsiteSections';
-import { X, Check, Plus, Award, Calendar, MapPin, CheckCircle2 } from 'lucide-react';
+import {
+  checkAndRecordRateLimit,
+  generateSecureReference,
+  validateEnrolmentForm,
+} from '../utils/security';
+import {
+  X,
+  Check,
+  Plus,
+  Award,
+  Calendar,
+  MapPin,
+  CheckCircle2,
+  AlertCircle,
+} from 'lucide-react';
 
 interface CourseDetailModalProps {
   course: CourseItem | null;
@@ -252,7 +266,15 @@ export const EnrolModal: React.FC<EnrolModalProps> = ({
   const [quickCourseId, setQuickCourseId] = useState<string>(
     ALL_COURSES[0]?.id || ''
   );
+  const [honeypot, setHoneypot] = useState('');
+  const [formError, setFormError] = useState<string | null>(null);
   const [submittedRef, setSubmittedRef] = useState<string | null>(null);
+  const [validatedName, setValidatedName] = useState<string>('');
+
+  const allowedCourseIds = useMemo(
+    () => new Set(ALL_COURSES.map((c) => c.id)),
+    []
+  );
 
   if (!isOpen) return null;
 
@@ -266,17 +288,47 @@ export const EnrolModal: React.FC<EnrolModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(null);
+
+    const validation = validateEnrolmentForm({
+      fullName,
+      email,
+      phone,
+      schedule,
+      selectedCourseIds,
+      quickCourseId,
+      allowedCourseIds,
+      honeypot,
+    });
+
+    if (!validation.valid || !validation.data) {
+      setFormError(
+        validation.error || 'Please verify your enrolment details and try again.'
+      );
+      return;
+    }
+
+    const rateLimit = checkAndRecordRateLimit('enrolment_submit', 3, 10 * 60 * 1000);
+    if (!rateLimit.allowed) {
+      setFormError(
+        rateLimit.message ||
+          'Too many submissions (HTTP 429). Please wait a few minutes before trying again.'
+      );
+      return;
+    }
+
     if (selectedCourses.length === 0 && quickCourseId) {
       const found = ALL_COURSES.find((c) => c.id === quickCourseId);
       if (found) onToggleCourse(found);
     }
-    const randomRef =
-      'BBT-2026-' + Math.floor(100000 + Math.random() * 900000);
-    setSubmittedRef(randomRef);
+
+    setValidatedName(validation.data.fullName);
+    setSubmittedRef(generateSecureReference('BBT-2026'));
   };
 
   const handleResetAndClose = () => {
     setSubmittedRef(null);
+    setFormError(null);
     onClose();
   };
 
@@ -335,7 +387,9 @@ export const EnrolModal: React.FC<EnrolModalProps> = ({
               </div>
               <div className="flex justify-between">
                 <span className="text-[#454545]">Applicant Name:</span>
-                <span className="font-bold text-[#121212]">{fullName}</span>
+                <span className="font-bold text-[#121212]">
+                  {validatedName || fullName}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-[#454545]">Preferred Schedule:</span>
@@ -362,7 +416,35 @@ export const EnrolModal: React.FC<EnrolModalProps> = ({
             </button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <form onSubmit={handleSubmit} className="p-6 space-y-4" noValidate>
+            {/* Anti-bot Honeypot Field (hidden from legitimate users) */}
+            <div
+              aria-hidden="true"
+              className="hidden"
+              style={{ display: 'none' }}
+            >
+              <label htmlFor="bbt-enrol-website">Website</label>
+              <input
+                id="bbt-enrol-website"
+                name="website"
+                type="text"
+                tabIndex={-1}
+                autoComplete="off"
+                value={honeypot}
+                onChange={(e) => setHoneypot(e.target.value)}
+              />
+            </div>
+
+            {formError && (
+              <div
+                role="alert"
+                className="flex items-start gap-2.5 p-3 rounded-lg bg-[#fef2f2] border border-[#fecaca] text-[#991b1b] text-xs font-montserrat font-semibold"
+              >
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-[#dc2626]" />
+                <span>{formError}</span>
+              </div>
+            )}
+
             {/* Selected Courses or Course Picker */}
             <div>
               <label className="block font-montserrat font-bold text-xs text-[#121212] mb-1.5">
@@ -419,8 +501,11 @@ export const EnrolModal: React.FC<EnrolModalProps> = ({
                 <input
                   type="text"
                   required
+                  minLength={2}
+                  maxLength={100}
+                  autoComplete="name"
                   value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
+                  onChange={(e) => setFullName(e.target.value.slice(0, 100))}
                   placeholder="e.g. Adewale Ogunleye"
                   className="w-full px-3 py-2 bg-[#f8f9fc] border border-[#e3e5f0] rounded text-xs font-montserrat text-[#121212] focus:outline-none focus:border-[#1c3f9c]"
                 />
@@ -432,8 +517,12 @@ export const EnrolModal: React.FC<EnrolModalProps> = ({
                 <input
                   type="tel"
                   required
+                  minLength={7}
+                  maxLength={20}
+                  inputMode="tel"
+                  autoComplete="tel"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={(e) => setPhone(e.target.value.slice(0, 20))}
                   placeholder="e.g. +234 803 000 0000"
                   className="w-full px-3 py-2 bg-[#f8f9fc] border border-[#e3e5f0] rounded text-xs font-montserrat text-[#121212] focus:outline-none focus:border-[#1c3f9c]"
                 />
@@ -447,8 +536,12 @@ export const EnrolModal: React.FC<EnrolModalProps> = ({
               <input
                 type="email"
                 required
+                minLength={5}
+                maxLength={120}
+                inputMode="email"
+                autoComplete="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value.slice(0, 120))}
                 placeholder="you@example.com"
                 className="w-full px-3 py-2 bg-[#f8f9fc] border border-[#e3e5f0] rounded text-xs font-montserrat text-[#121212] focus:outline-none focus:border-[#1c3f9c]"
               />

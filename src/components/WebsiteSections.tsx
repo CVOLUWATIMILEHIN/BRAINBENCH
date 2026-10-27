@@ -9,6 +9,7 @@ import {
   GALLERY_PAGE_18,
   GALLERY_PAGE_19,
 } from '../data/brochureData';
+import { isSafeImageUrl } from '../utils/security';
 import {
   ArrowRight,
   ArrowUpRight,
@@ -37,7 +38,7 @@ export const ResilientImage: React.FC<{
 }) => {
   const [failed, setFailed] = useState(false);
 
-  if (failed || !src) {
+  if (failed || !src || !isSafeImageUrl(src)) {
     return (
       <div
         className={`flex flex-col items-center justify-center bg-gradient-to-br from-[#1c3f9c] to-[#121212] text-white p-6 text-center ${className}`}
@@ -58,6 +59,7 @@ export const ResilientImage: React.FC<{
       alt={alt}
       referrerPolicy="no-referrer"
       loading="lazy"
+      decoding="async"
       onError={() => setFailed(true)}
       style={{ objectPosition }}
       className={`${className} ${flipX ? '-scale-x-100' : ''}`}

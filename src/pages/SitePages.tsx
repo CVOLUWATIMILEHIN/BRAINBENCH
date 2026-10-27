@@ -23,6 +23,13 @@ import {
 import { CourseCatalogueHero } from '../components/CourseCatalogueHero';
 import { Link } from '../router';
 import {
+  checkAndRecordRateLimit,
+  generateSecureReference,
+  sanitizeSearchQuery,
+  validateContactInquiryForm,
+} from '../utils/security';
+import {
+  AlertCircle,
   ArrowRight,
   Award,
   BookOpen,
@@ -966,8 +973,11 @@ export const CoursesPage: React.FC<CoursesPageProps> = ({
                   <Search className="w-4 h-4 text-[#454545] absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
                     type="text"
+                    maxLength={100}
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) =>
+                      setSearchQuery(sanitizeSearchQuery(e.target.value, 100))
+                    }
                     placeholder={`Search all ${ALL_COURSES.length} courses by title, category, or keyword (e.g., Public Speaking, CapCut, Premiere Pro, Vibe Coding, AI, Python)...`}
                     className="w-full pl-11 pr-10 py-3 bg-white border border-[#e3e5f0] rounded-lg text-sm font-montserrat text-[#121212] placeholder:text-[#454545]/70 focus:outline-none focus:border-[#1c3f9c]"
                   />
@@ -1325,12 +1335,46 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onOpenEnrol }) => {
     'Course Enrolment & Tuition'
   );
   const [message, setMessage] = useState('');
+  const [honeypot, setHoneypot] = useState('');
+  const [formError, setFormError] = useState<string | null>(null);
   const [submittedTicket, setSubmittedTicket] = useState<string | null>(null);
+  const [validatedName, setValidatedName] = useState<string>('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const ticket = 'BBT-INQ-' + Math.floor(100000 + Math.random() * 900000);
-    setSubmittedTicket(ticket);
+    setFormError(null);
+
+    const validation = validateContactInquiryForm({
+      fullName,
+      email,
+      phone,
+      inquiryTopic,
+      message,
+      honeypot,
+    });
+
+    if (!validation.valid || !validation.data) {
+      setFormError(
+        validation.error || 'Please check your inquiry details and try again.'
+      );
+      return;
+    }
+
+    const rateLimit = checkAndRecordRateLimit(
+      'contact_inquiry_submit',
+      3,
+      10 * 60 * 1000
+    );
+    if (!rateLimit.allowed) {
+      setFormError(
+        rateLimit.message ||
+          'Too many inquiries submitted (HTTP 429). Please wait a few minutes before trying again.'
+      );
+      return;
+    }
+
+    setValidatedName(validation.data.fullName);
+    setSubmittedTicket(generateSecureReference('BBT-INQ'));
   };
 
   return (
@@ -1530,7 +1574,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onOpenEnrol }) => {
                       Inquiry Received by Brainbench Technology
                     </h3>
                     <p className="font-merriweather text-sm text-[#454545] mt-1 max-w-md mx-auto">
-                      Thank you, <strong>{fullName}</strong>. Your message
+                      Thank you, <strong>{validatedName || fullName}</strong>. Your message
                       regarding <strong>{inquiryTopic}</strong> has been logged
                       (Reference:{' '}
                       <span className="font-mono-tabular font-bold text-[#1c3f9c]">
@@ -1543,6 +1587,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onOpenEnrol }) => {
                     type="button"
                     onClick={() => {
                       setSubmittedTicket(null);
+                      setFormError(null);
                       setMessage('');
                     }}
                     className="px-6 py-3 bg-[#1c3f9c] hover:bg-[#174da8] text-white font-montserrat font-bold text-xs rounded-lg cursor-pointer"
@@ -1551,7 +1596,35 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onOpenEnrol }) => {
                   </button>
                 </div>
               ) : (
-                <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+                <form onSubmit={handleSubmit} className="mt-6 space-y-5" noValidate>
+                  {/* Anti-bot Honeypot Field (hidden from legitimate visitors) */}
+                  <div
+                    aria-hidden="true"
+                    className="hidden"
+                    style={{ display: 'none' }}
+                  >
+                    <label htmlFor="bbt-contact-website">Website</label>
+                    <input
+                      id="bbt-contact-website"
+                      name="website"
+                      type="text"
+                      tabIndex={-1}
+                      autoComplete="off"
+                      value={honeypot}
+                      onChange={(e) => setHoneypot(e.target.value)}
+                    />
+                  </div>
+
+                  {formError && (
+                    <div
+                      role="alert"
+                      className="flex items-start gap-2.5 p-3.5 rounded-lg bg-[#fef2f2] border border-[#fecaca] text-[#991b1b] text-xs font-montserrat font-semibold"
+                    >
+                      <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-[#dc2626]" />
+                      <span>{formError}</span>
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div>
                       <label className="block font-montserrat font-bold text-xs text-[#121212] mb-1.5">
@@ -1560,8 +1633,11 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onOpenEnrol }) => {
                       <input
                         type="text"
                         required
+                        minLength={2}
+                        maxLength={100}
+                        autoComplete="name"
                         value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
+                        onChange={(e) => setFullName(e.target.value.slice(0, 100))}
                         placeholder="e.g. Adewale Ogunleye"
                         className="w-full px-4 py-3 bg-[#F8F9FC] border border-[#e3e5f0] rounded-lg text-sm font-montserrat text-[#121212] focus:outline-none focus:border-[#1c3f9c]"
                       />
@@ -1573,8 +1649,12 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onOpenEnrol }) => {
                       <input
                         type="tel"
                         required
+                        minLength={7}
+                        maxLength={20}
+                        inputMode="tel"
+                        autoComplete="tel"
                         value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
+                        onChange={(e) => setPhone(e.target.value.slice(0, 20))}
                         placeholder="e.g. +234 803 000 0000"
                         className="w-full px-4 py-3 bg-[#F8F9FC] border border-[#e3e5f0] rounded-lg text-sm font-montserrat text-[#121212] focus:outline-none focus:border-[#1c3f9c]"
                       />
@@ -1589,8 +1669,12 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onOpenEnrol }) => {
                       <input
                         type="email"
                         required
+                        minLength={5}
+                        maxLength={120}
+                        inputMode="email"
+                        autoComplete="email"
                         value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        onChange={(e) => setEmail(e.target.value.slice(0, 120))}
                         placeholder="you@example.com"
                         className="w-full px-4 py-3 bg-[#F8F9FC] border border-[#e3e5f0] rounded-lg text-sm font-montserrat text-[#121212] focus:outline-none focus:border-[#1c3f9c]"
                       />
@@ -1628,8 +1712,10 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onOpenEnrol }) => {
                     <textarea
                       rows={5}
                       required
+                      minLength={10}
+                      maxLength={1500}
                       value={message}
-                      onChange={(e) => setMessage(e.target.value)}
+                      onChange={(e) => setMessage(e.target.value.slice(0, 1500))}
                       placeholder="Tell us which course, programme, or event you would like to join or learn more about..."
                       className="w-full px-4 py-3 bg-[#F8F9FC] border border-[#e3e5f0] rounded-lg text-sm font-montserrat text-[#121212] focus:outline-none focus:border-[#1c3f9c]"
                     />
