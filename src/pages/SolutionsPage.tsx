@@ -1,34 +1,34 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Link } from '../router';
 import {
+  ALLOWED_DEMO_PRODUCTS,
+  type AllowedDemoProduct,
+  checkAndRecordDuplicateSubmission,
   checkAndRecordRateLimit,
   generateSecureReference,
-  validateContactInquiryForm,
+  validateDemoRequestForm,
 } from '../utils/security';
 import {
   AlertCircle,
   ArrowRight,
   BookOpen,
-  Building2,
+  Calendar,
   Check,
   CheckCircle2,
   Cpu,
-  Database,
-  ExternalLink,
   FileCheck,
   GraduationCap,
   HardDrive,
   Headphones,
   Laptop,
   Layers,
+  Loader2,
   Lock,
   Mail,
   MapPin,
   Phone,
   Server,
   ShieldCheck,
-  Sparkles,
-  Users,
   Zap,
 } from 'lucide-react';
 
@@ -227,41 +227,41 @@ export const SolutionsPage: React.FC<SolutionsPageProps> = () => {
     'ultra-cbt' | 'portal-pro' | 'lms-elibrary'
   >('ultra-cbt');
 
-  // Interactive Demo / Inquiry Form State
-  const [institutionName, setInstitutionName] = useState('');
-  const [contactName, setContactName] = useState('');
+  // Demo Request Form State
+  const [fullName, setFullName] = useState('');
+  const [organisation, setOrganisation] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [selectedProductInterest, setSelectedProductInterest] = useState<string[]>(
-    ['ULTRA CBT']
-  );
-  const [institutionSize, setInstitutionSize] = useState('500 - 2,000 students');
+  const [selectedProduct, setSelectedProduct] =
+    useState<AllowedDemoProduct>('ULTRA CBT');
+  const [preferredDate, setPreferredDate] = useState('');
   const [message, setMessage] = useState('');
   const [honeypot, setHoneypot] = useState('');
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
-  const [submittedTicket, setSubmittedTicket] = useState<string | null>(null);
-  const [validatedContact, setValidatedContact] = useState<string>('');
+  const [autoSelectedNotice, setAutoSelectedNotice] = useState<string | null>(
+    null
+  );
+  const [submittedRecord, setSubmittedRecord] = useState<{
+    referenceCode: string;
+    fullName: string;
+    organisation: string;
+    product: AllowedDemoProduct;
+    preferredDate: string;
+  } | null>(null);
 
-  const activeProduct =
-    SOLUTIONS_DATA.find((p) => p.id === activeSolutionId) || SOLUTIONS_DATA[0];
+  const fullNameInputRef = useRef<HTMLInputElement | null>(null);
 
-  const handleToggleProductInterest = (productName: string) => {
-    setSelectedProductInterest((prev) =>
-      prev.includes(productName)
-        ? prev.length > 1
-          ? prev.filter((p) => p !== productName)
-          : prev
-        : [...prev, productName]
-    );
-  };
+  const todayIso = new Date().toISOString().split('T')[0];
 
   const handleProductSelectAndScroll = (
     solutionId: 'ultra-cbt' | 'portal-pro' | 'lms-elibrary'
   ) => {
     setActiveSolutionId(solutionId);
     const prod = SOLUTIONS_DATA.find((s) => s.id === solutionId);
-    if (prod && !selectedProductInterest.includes(prod.name)) {
-      setSelectedProductInterest((prev) => [...prev, prod.name]);
+    if (prod) {
+      setSelectedProduct(prod.name as AllowedDemoProduct);
     }
     const el = document.getElementById(`solution-${solutionId}`);
     if (el) {
@@ -271,32 +271,44 @@ export const SolutionsPage: React.FC<SolutionsPageProps> = () => {
     }
   };
 
-  const handleScrollToDemo = (productToPreselect?: string) => {
-    if (productToPreselect && !selectedProductInterest.includes(productToPreselect)) {
-      setSelectedProductInterest((prev) => [...prev, productToPreselect]);
+  const handleScrollToDemo = (productToPreselect?: AllowedDemoProduct) => {
+    if (productToPreselect) {
+      setSelectedProduct(productToPreselect);
+      setAutoSelectedNotice(productToPreselect);
+      const matched = SOLUTIONS_DATA.find((s) => s.name === productToPreselect);
+      if (matched) {
+        setActiveSolutionId(matched.id);
+      }
     }
+    if (submittedRecord) {
+      setSubmittedRecord(null);
+    }
+    setFormError(null);
     const el = document.getElementById('request-demo');
     if (el) {
       const headerOffset = 84;
       const pos = el.getBoundingClientRect().top + window.scrollY;
       window.scrollTo({ top: Math.max(0, pos - headerOffset), behavior: 'smooth' });
+      window.setTimeout(() => {
+        fullNameInputRef.current?.focus({ preventScroll: true });
+      }, 450);
     }
   };
 
-  const handleSubmitDemoRequest = (e: React.FormEvent) => {
+  const handleSubmitDemoRequest = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setFormError(null);
 
-    const fullMessage = `Institution: ${institutionName.trim()} | Size: ${institutionSize} | Products of Interest: ${selectedProductInterest.join(
-      ', '
-    )} | Details: ${message.trim()}`;
-
-    const validation = validateContactInquiryForm({
-      fullName: contactName,
+    // 1. Client-side field validation & honeypot check
+    const validation = validateDemoRequestForm({
+      fullName,
+      organisation,
       email,
       phone,
-      inquiryTopic: 'Software Solutions Demo (ULTRA CBT, PORTAL PRO, LMS)',
-      message: fullMessage,
+      product: selectedProduct,
+      preferredDate,
+      message,
       honeypot,
     });
 
@@ -308,14 +320,26 @@ export const SolutionsPage: React.FC<SolutionsPageProps> = () => {
       return;
     }
 
-    if (institutionName.trim().length < 2) {
-      setFormError('Please provide the official name of your institution.');
+    const validData = validation.data;
+
+    // 2. Duplicate submission guard
+    const dupCheck = checkAndRecordDuplicateSubmission(
+      validData.email,
+      validData.organisation,
+      validData.product
+    );
+    if (dupCheck.duplicate) {
+      setFormError(
+        dupCheck.message ||
+          'This demo request was already submitted moments ago.'
+      );
       return;
     }
 
+    // 3. Sliding-window rate limit check
     const rateLimit = checkAndRecordRateLimit(
       'solution_demo_request',
-      3,
+      4,
       10 * 60 * 1000
     );
     if (!rateLimit.allowed) {
@@ -326,8 +350,102 @@ export const SolutionsPage: React.FC<SolutionsPageProps> = () => {
       return;
     }
 
-    setValidatedContact(validation.data.fullName);
-    setSubmittedTicket(generateSecureReference('BBT-SOL'));
+    setIsSubmitting(true);
+
+    try {
+      // 4. Server-side validation & reference code generation
+      let requestId = `req_${
+        typeof crypto !== 'undefined' && crypto.randomUUID
+          ? crypto.randomUUID().replace(/-/g, '')
+          : Date.now()
+      }`;
+      let referenceCode = generateSecureReference('BBT-SOL');
+
+      try {
+        const validateRes = await fetch('/api/demo-requests/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...validData,
+            honeypot,
+          }),
+        });
+
+        if (validateRes.status === 400 || validateRes.status === 409 || validateRes.status === 429) {
+          const errPayload = await validateRes.json().catch(() => ({}));
+          setFormError(
+            errPayload.error ||
+              'Unable to validate your demo request. Please review your details and try again.'
+          );
+          setIsSubmitting(false);
+          return;
+        }
+
+        if (validateRes.ok) {
+          const serverValidated = await validateRes.json();
+          if (serverValidated.requestId) requestId = serverValidated.requestId;
+          if (serverValidated.referenceCode)
+            referenceCode = serverValidated.referenceCode;
+        }
+      } catch {
+        // Continue with client reference if API validation endpoint is unreachable
+      }
+
+      // 5. Persist request via the backend API (/api/demo-requests)
+      try {
+        const createRes = await fetch('/api/demo-requests', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            requestId,
+            referenceCode,
+            ...validData,
+            honeypot,
+          }),
+        });
+
+        if (!createRes.ok) {
+          const errPayload = await createRes.json().catch(() => ({}));
+          setFormError(
+            errPayload.error ||
+              'We could not save your demo request right now. Please check your connection and try again.'
+          );
+          setIsSubmitting(false);
+          return;
+        }
+      } catch {
+        setFormError(
+          'We could not save your demo request right now due to a network error. Please check your connection and try again.'
+        );
+        setIsSubmitting(false);
+        return;
+      }
+
+      // 6. Trigger server-side email notification asynchronously (does not block saved record)
+      fetch('/api/demo-requests/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          requestId,
+          referenceCode,
+          ...validData,
+          submittedAt: new Date().toISOString(),
+        }),
+      }).catch((notifyErr) => {
+        console.warn('Email notification dispatch warning:', notifyErr);
+      });
+
+      // 7. Show confirmation after server persistence succeeded
+      setSubmittedRecord({
+        referenceCode,
+        fullName: validData.fullName,
+        organisation: validData.organisation,
+        product: validData.product,
+        preferredDate: validData.preferredDate,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -562,11 +680,22 @@ export const SolutionsPage: React.FC<SolutionsPageProps> = () => {
                     </p>
                   </div>
 
-                  <div className="mt-6 pt-5 border-t border-[#e3e5f0] flex items-center justify-between">
-                    <span className="font-montserrat font-bold text-xs text-[#1c3f9c] group-hover:underline">
-                      {isActive ? 'Currently Viewing' : product.ctaLabel}
+                  <div className="mt-6 pt-5 border-t border-[#e3e5f0] flex flex-wrap items-center justify-between gap-3">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleScrollToDemo(product.name as AllowedDemoProduct);
+                      }}
+                      className="px-4 py-2.5 bg-[#1c3f9c] hover:bg-[#174da8] text-white font-montserrat font-extrabold text-xs rounded-lg inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      <span>Request a Demo</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                    <span className="font-montserrat font-bold text-xs text-[#1c3f9c] hover:underline inline-flex items-center gap-1">
+                      <span>{isActive ? 'Viewing Details' : product.ctaLabel}</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
                     </span>
-                    <ArrowRight className="w-4 h-4 text-[#1c3f9c]" />
                   </div>
                 </div>
               );
@@ -1274,53 +1403,124 @@ export const SolutionsPage: React.FC<SolutionsPageProps> = () => {
 
             {/* Right 7 Columns: Interactive Demo Request Form */}
             <div className="lg:col-span-7 bg-white rounded-2xl border border-[#e3e5f0] p-7 sm:p-10 shadow-xs">
-              <div className="pb-6 border-b border-[#e3e5f0]">
-                <span className="font-montserrat font-extrabold text-xs uppercase tracking-widest text-[#1c3f9c]">
-                  TAILORED INSTITUTIONAL QUOTE &bull; DEMO REQUEST
-                </span>
-                <h3 className="font-montserrat font-extrabold text-2xl sm:text-3xl text-[#121212] mt-1">
-                  Request a Demo or Proposal
-                </h3>
-                <p className="font-merriweather text-xs sm:text-sm text-[#454545] mt-2">
-                  Provide your institution details below. Our team responds within 24 business hours.
-                </p>
+              <div className="pb-6 border-b border-[#e3e5f0] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <span className="font-montserrat font-extrabold text-xs uppercase tracking-widest text-[#1c3f9c]">
+                    TAILORED INSTITUTIONAL WALKTHROUGH &bull; DEMO REQUEST
+                  </span>
+                  <h3 className="font-montserrat font-extrabold text-2xl sm:text-3xl text-[#121212] mt-1">
+                    Request a Product Demo
+                  </h3>
+                  <p className="font-merriweather text-xs sm:text-sm text-[#454545] mt-1.5">
+                    Complete the form below to schedule a live demonstration of{' '}
+                    <strong>ULTRA CBT</strong>, <strong>PORTAL PRO</strong>, or{' '}
+                    <strong>LMS E-LIBRARY</strong>.
+                  </p>
+                </div>
+                {autoSelectedNotice && !submittedRecord && (
+                  <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-[#eef3fc] border border-[#1c3f9c]/25 text-[#1c3f9c] font-montserrat font-bold text-xs shrink-0">
+                    <CheckCircle2 className="w-4 h-4 text-[#1c3f9c] shrink-0" />
+                    <span>Selected: {autoSelectedNotice}</span>
+                  </div>
+                )}
               </div>
 
-              {submittedTicket ? (
-                <div className="py-12 text-center space-y-5">
-                  <CheckCircle2 className="w-14 h-14 text-[#10b981] mx-auto" />
-                  <div>
-                    <h3 className="font-montserrat font-extrabold text-xl text-[#121212]">
-                      Demo Request Logged Successfully
+              {submittedRecord ? (
+                <div className="py-10 text-center space-y-6">
+                  <div className="w-16 h-16 rounded-full bg-[#10b981]/10 text-[#10b981] flex items-center justify-center mx-auto">
+                    <CheckCircle2 className="w-10 h-10" />
+                  </div>
+                  <div className="space-y-2">
+                    <span className="inline-block px-3 py-1 rounded-full bg-[#ecfdf5] text-[#047857] font-montserrat font-extrabold text-[11px] uppercase tracking-wider">
+                      Request Saved &amp; Confirmed
+                    </span>
+                    <h3 className="font-montserrat font-extrabold text-2xl text-[#121212]">
+                      Demo Request Received!
                     </h3>
-                    <p className="font-merriweather text-sm text-[#454545] mt-1 max-w-md mx-auto">
-                      Thank you, <strong>{validatedContact || contactName}</strong>. Your request for{' '}
-                      <strong>{institutionName}</strong> regarding{' '}
-                      <strong>{selectedProductInterest.join(', ')}</strong> has been registered.
+                    <p className="font-merriweather text-sm text-[#454545] max-w-lg mx-auto leading-relaxed">
+                      Thank you, <strong>{submittedRecord.fullName}</strong>. Your
+                      request for a live demonstration of{' '}
+                      <strong className="text-[#1c3f9c]">
+                        {submittedRecord.product}
+                      </strong>{' '}
+                      for <strong>{submittedRecord.organisation}</strong> has been
+                      saved in our system. Our solutions team will contact you
+                      shortly to confirm your session.
                     </p>
-                    <div className="mt-4 inline-block px-4 py-2 bg-[#F8F9FC] border border-[#e3e5f0] rounded-lg">
-                      <span className="text-xs font-montserrat text-[#454545]">Tracking Reference: </span>
+                  </div>
+
+                  <div className="max-w-md mx-auto p-5 bg-[#F8F9FC] border border-[#e3e5f0] rounded-xl text-left space-y-2.5 text-xs font-montserrat">
+                    <div className="flex items-center justify-between border-b border-[#e3e5f0] pb-2">
+                      <span className="text-[#454545] font-semibold">
+                        Reference ID:
+                      </span>
                       <span className="font-mono-tabular font-bold text-sm text-[#1c3f9c]">
-                        {submittedTicket}
+                        {submittedRecord.referenceCode}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[#454545] font-semibold">
+                        Product of Interest:
+                      </span>
+                      <span className="font-bold text-[#121212]">
+                        {submittedRecord.product}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[#454545] font-semibold">
+                        Organisation:
+                      </span>
+                      <span className="font-bold text-[#121212]">
+                        {submittedRecord.organisation}
+                      </span>
+                    </div>
+                    {submittedRecord.preferredDate && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-[#454545] font-semibold">
+                          Preferred Demo Date:
+                        </span>
+                        <span className="font-bold text-[#121212]">
+                          {submittedRecord.preferredDate}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between">
+                      <span className="text-[#454545] font-semibold">
+                        Status:
+                      </span>
+                      <span className="px-2.5 py-0.5 rounded bg-[#1c3f9c]/10 text-[#1c3f9c] font-bold">
+                        New
                       </span>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSubmittedTicket(null);
-                      setFormError(null);
-                      setMessage('');
-                    }}
-                    className="px-6 py-3 bg-[#1c3f9c] hover:bg-[#174da8] text-white font-montserrat font-bold text-xs rounded-lg cursor-pointer transition-colors"
-                  >
-                    Submit Another Inquiry
-                  </button>
+
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSubmittedRecord(null);
+                        setFormError(null);
+                        setPreferredDate('');
+                        setMessage('');
+                      }}
+                      className="px-6 py-3 bg-[#1c3f9c] hover:bg-[#174da8] text-white font-montserrat font-bold text-xs rounded-lg cursor-pointer transition-colors"
+                    >
+                      Submit Another Demo Request
+                    </button>
+                  </div>
                 </div>
               ) : (
-                <form onSubmit={handleSubmitDemoRequest} className="mt-6 space-y-5" noValidate>
+                <form
+                  onSubmit={handleSubmitDemoRequest}
+                  className="mt-6 space-y-5"
+                  noValidate
+                >
                   {/* Anti-bot Honeypot Field */}
-                  <div aria-hidden="true" className="hidden" style={{ display: 'none' }}>
+                  <div
+                    aria-hidden="true"
+                    className="hidden"
+                    style={{ display: 'none' }}
+                  >
                     <label htmlFor="bbt-sol-website">Website</label>
                     <input
                       id="bbt-sol-website"
@@ -1343,51 +1543,70 @@ export const SolutionsPage: React.FC<SolutionsPageProps> = () => {
                     </div>
                   )}
 
-                  {/* Institution Name & Contact Person */}
+                  {/* 1. Full Name & 2. Organisation or Institution */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div>
-                      <label className="block font-montserrat font-bold text-xs text-[#121212] mb-1.5">
-                        Institution / Organization Name *
+                      <label
+                        htmlFor="demo-full-name"
+                        className="block font-montserrat font-bold text-xs text-[#121212] mb-1.5"
+                      >
+                        Full Name *
                       </label>
                       <input
+                        ref={fullNameInputRef}
+                        id="demo-full-name"
                         type="text"
                         required
+                        disabled={isSubmitting}
                         minLength={2}
-                        maxLength={120}
-                        value={institutionName}
-                        onChange={(e) => setInstitutionName(e.target.value.slice(0, 120))}
-                        placeholder="e.g. Ekiti Apex Academy / Standard CBT Centre"
-                        className="w-full px-4 py-3 bg-[#F8F9FC] border border-[#e3e5f0] rounded-lg text-sm font-montserrat text-[#121212] focus:outline-none focus:border-[#1c3f9c]"
+                        maxLength={100}
+                        autoComplete="name"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value.slice(0, 100))}
+                        placeholder="e.g. Dr. Olumide Adeleke"
+                        className="w-full px-4 py-3 bg-[#F8F9FC] border border-[#e3e5f0] rounded-lg text-sm font-montserrat text-[#121212] focus:outline-none focus:border-[#1c3f9c] disabled:opacity-60"
                       />
                     </div>
 
                     <div>
-                      <label className="block font-montserrat font-bold text-xs text-[#121212] mb-1.5">
-                        Contact Person &amp; Role *
+                      <label
+                        htmlFor="demo-organisation"
+                        className="block font-montserrat font-bold text-xs text-[#121212] mb-1.5"
+                      >
+                        Organisation or Institution *
                       </label>
                       <input
+                        id="demo-organisation"
                         type="text"
                         required
+                        disabled={isSubmitting}
                         minLength={2}
-                        maxLength={100}
-                        autoComplete="name"
-                        value={contactName}
-                        onChange={(e) => setContactName(e.target.value.slice(0, 100))}
-                        placeholder="e.g. Dr. Olumide Adeleke (Principal / ICT Director)"
-                        className="w-full px-4 py-3 bg-[#F8F9FC] border border-[#e3e5f0] rounded-lg text-sm font-montserrat text-[#121212] focus:outline-none focus:border-[#1c3f9c]"
+                        maxLength={140}
+                        autoComplete="organization"
+                        value={organisation}
+                        onChange={(e) =>
+                          setOrganisation(e.target.value.slice(0, 140))
+                        }
+                        placeholder="e.g. Ekiti State Model College"
+                        className="w-full px-4 py-3 bg-[#F8F9FC] border border-[#e3e5f0] rounded-lg text-sm font-montserrat text-[#121212] focus:outline-none focus:border-[#1c3f9c] disabled:opacity-60"
                       />
                     </div>
                   </div>
 
-                  {/* Phone & Email */}
+                  {/* 3. Work Email & 4. Phone Number */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div>
-                      <label className="block font-montserrat font-bold text-xs text-[#121212] mb-1.5">
-                        Official Email Address *
+                      <label
+                        htmlFor="demo-email"
+                        className="block font-montserrat font-bold text-xs text-[#121212] mb-1.5"
+                      >
+                        Work Email *
                       </label>
                       <input
+                        id="demo-email"
                         type="email"
                         required
+                        disabled={isSubmitting}
                         minLength={5}
                         maxLength={120}
                         inputMode="email"
@@ -1395,17 +1614,22 @@ export const SolutionsPage: React.FC<SolutionsPageProps> = () => {
                         value={email}
                         onChange={(e) => setEmail(e.target.value.slice(0, 120))}
                         placeholder="admin@yourschool.edu.ng"
-                        className="w-full px-4 py-3 bg-[#F8F9FC] border border-[#e3e5f0] rounded-lg text-sm font-montserrat text-[#121212] focus:outline-none focus:border-[#1c3f9c]"
+                        className="w-full px-4 py-3 bg-[#F8F9FC] border border-[#e3e5f0] rounded-lg text-sm font-montserrat text-[#121212] focus:outline-none focus:border-[#1c3f9c] disabled:opacity-60"
                       />
                     </div>
 
                     <div>
-                      <label className="block font-montserrat font-bold text-xs text-[#121212] mb-1.5">
-                        Phone / WhatsApp Number *
+                      <label
+                        htmlFor="demo-phone"
+                        className="block font-montserrat font-bold text-xs text-[#121212] mb-1.5"
+                      >
+                        Phone Number *
                       </label>
                       <input
+                        id="demo-phone"
                         type="tel"
                         required
+                        disabled={isSubmitting}
                         minLength={7}
                         maxLength={20}
                         inputMode="tel"
@@ -1413,90 +1637,127 @@ export const SolutionsPage: React.FC<SolutionsPageProps> = () => {
                         value={phone}
                         onChange={(e) => setPhone(e.target.value.slice(0, 20))}
                         placeholder="+234 803 000 0000"
-                        className="w-full px-4 py-3 bg-[#F8F9FC] border border-[#e3e5f0] rounded-lg text-sm font-montserrat text-[#121212] focus:outline-none focus:border-[#1c3f9c]"
+                        className="w-full px-4 py-3 bg-[#F8F9FC] border border-[#e3e5f0] rounded-lg text-sm font-montserrat text-[#121212] focus:outline-none focus:border-[#1c3f9c] disabled:opacity-60"
                       />
                     </div>
                   </div>
 
-                  {/* Solution(s) of Interest Checkboxes */}
-                  <div>
-                    <label className="block font-montserrat font-bold text-xs text-[#121212] mb-2">
-                      Products of Interest (Select all that apply) *
-                    </label>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      {['ULTRA CBT', 'PORTAL PRO', 'LMS E-LIBRARY'].map((prod) => {
-                        const isChecked = selectedProductInterest.includes(prod);
-                        return (
-                          <button
-                            key={prod}
-                            type="button"
-                            onClick={() => handleToggleProductInterest(prod)}
-                            className={`p-3 rounded-lg border text-left transition-all flex items-center justify-between cursor-pointer ${
-                              isChecked
-                                ? 'border-[#1c3f9c] bg-[#1c3f9c]/5 text-[#1c3f9c] font-bold'
-                                : 'border-[#e3e5f0] bg-[#F8F9FC] text-[#454545]'
-                            }`}
-                          >
-                            <span className="text-xs font-montserrat">{prod}</span>
-                            <div
-                              className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
-                                isChecked
-                                  ? 'bg-[#1c3f9c] border-[#1c3f9c] text-white'
-                                  : 'border-[#cbd5e1] bg-white'
+                  {/* 5. Product of Interest & 6. Preferred Demo Date (Optional) */}
+                  <div className="grid grid-cols-1 sm:grid-cols-12 gap-5 items-start">
+                    <div className="sm:col-span-7">
+                      <label className="block font-montserrat font-bold text-xs text-[#121212] mb-2">
+                        Product of Interest *
+                      </label>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        {ALLOWED_DEMO_PRODUCTS.map((prod) => {
+                          const isSelected = selectedProduct === prod;
+                          return (
+                            <button
+                              key={prod}
+                              type="button"
+                              disabled={isSubmitting}
+                              onClick={() => {
+                                setSelectedProduct(prod);
+                                setAutoSelectedNotice(null);
+                              }}
+                              className={`p-3 rounded-lg border text-left transition-all flex items-center justify-between cursor-pointer ${
+                                isSelected
+                                  ? 'border-[#1c3f9c] bg-[#1c3f9c]/10 text-[#1c3f9c] font-extrabold ring-2 ring-[#1c3f9c]/15'
+                                  : 'border-[#e3e5f0] bg-[#F8F9FC] text-[#454545] hover:border-[#1c3f9c]/50'
                               }`}
                             >
-                              {isChecked && <Check className="w-3 h-3 stroke-[3]" />}
-                            </div>
-                          </button>
-                        );
-                      })}
+                              <span className="text-xs font-montserrat">
+                                {prod}
+                              </span>
+                              <div
+                                className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+                                  isSelected
+                                    ? 'bg-[#1c3f9c] border-[#1c3f9c] text-white'
+                                    : 'border-[#cbd5e1] bg-white'
+                                }`}
+                              >
+                                {isSelected && (
+                                  <Check className="w-2.5 h-2.5 stroke-[3]" />
+                                )}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="sm:col-span-5">
+                      <label
+                        htmlFor="demo-preferred-date"
+                        className="block font-montserrat font-bold text-xs text-[#121212] mb-2"
+                      >
+                        Preferred Demo Date{' '}
+                        <span className="text-[#454545] font-normal">
+                          (Optional)
+                        </span>
+                      </label>
+                      <div className="relative">
+                        <Calendar className="w-4 h-4 text-[#1c3f9c] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        <input
+                          id="demo-preferred-date"
+                          type="date"
+                          min={todayIso}
+                          disabled={isSubmitting}
+                          value={preferredDate}
+                          onChange={(e) => setPreferredDate(e.target.value)}
+                          className="w-full pl-10 pr-3.5 py-2.5 bg-[#F8F9FC] border border-[#e3e5f0] rounded-lg text-sm font-montserrat text-[#121212] focus:outline-none focus:border-[#1c3f9c] disabled:opacity-60"
+                        />
+                      </div>
                     </div>
                   </div>
 
-                  {/* Institution Student Size */}
+                  {/* 7. Additional Message (Optional) */}
                   <div>
-                    <label className="block font-montserrat font-bold text-xs text-[#121212] mb-1.5">
-                      Estimated Student or Candidate Population
-                    </label>
-                    <select
-                      value={institutionSize}
-                      onChange={(e) => setInstitutionSize(e.target.value)}
-                      className="w-full px-4 py-3 bg-[#F8F9FC] border border-[#e3e5f0] rounded-lg text-sm font-montserrat font-semibold text-[#121212] focus:outline-none focus:border-[#1c3f9c]"
+                    <label
+                      htmlFor="demo-message"
+                      className="block font-montserrat font-bold text-xs text-[#121212] mb-1.5"
                     >
-                      <option value="Under 300 students">Under 300 students</option>
-                      <option value="300 - 1,000 students">300 - 1,000 students</option>
-                      <option value="1,000 - 3,000 students">1,000 - 3,000 students</option>
-                      <option value="3,000 - 10,000 students">3,000 - 10,000 students</option>
-                      <option value="10,000+ students (Enterprise / Center)">
-                        10,000+ students (Enterprise / Center)
-                      </option>
-                    </select>
-                  </div>
-
-                  {/* Detailed Requirements or Questions */}
-                  <div>
-                    <label className="block font-montserrat font-bold text-xs text-[#121212] mb-1.5">
-                      Project Requirements or Specific Inquiries *
+                      Additional Message{' '}
+                      <span className="text-[#454545] font-normal">
+                        (Optional)
+                      </span>
                     </label>
                     <textarea
+                      id="demo-message"
                       rows={4}
-                      required
-                      minLength={10}
+                      disabled={isSubmitting}
                       maxLength={1500}
                       value={message}
                       onChange={(e) => setMessage(e.target.value.slice(0, 1500))}
-                      placeholder="Tell us about your upcoming examination term, current portal setup, or specific features you require..."
-                      className="w-full px-4 py-3 bg-[#F8F9FC] border border-[#e3e5f0] rounded-lg text-sm font-montserrat text-[#121212] focus:outline-none focus:border-[#1c3f9c]"
+                      placeholder="Share your student population size, preferred demo format (online or onsite), or any specific requirements..."
+                      className="w-full px-4 py-3 bg-[#F8F9FC] border border-[#e3e5f0] rounded-lg text-sm font-montserrat text-[#121212] focus:outline-none focus:border-[#1c3f9c] disabled:opacity-60"
                     />
                   </div>
 
-                  <button
-                    type="submit"
-                    className="px-8 py-4 bg-[#1c3f9c] hover:bg-[#174da8] text-white font-montserrat font-extrabold text-sm rounded-lg inline-flex items-center gap-2.5 transition-colors cursor-pointer"
-                  >
-                    <span>Submit Demo Request</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
+                  <div className="pt-1 flex flex-wrap items-center justify-between gap-4">
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="px-8 py-4 bg-[#1c3f9c] hover:bg-[#174da8] disabled:bg-[#1c3f9c]/60 text-white font-montserrat font-extrabold text-sm rounded-lg inline-flex items-center gap-2.5 transition-colors cursor-pointer disabled:cursor-not-allowed"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Submitting Demo Request...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>Submit Demo Request</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </>
+                      )}
+                    </button>
+
+                    <div className="flex items-center gap-1.5 text-[11px] font-montserrat text-[#454545]">
+                      <Lock className="w-3.5 h-3.5 text-[#1c3f9c]" />
+                      <span>Encrypted &amp; stored securely</span>
+                    </div>
+                  </div>
                 </form>
               )}
             </div>

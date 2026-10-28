@@ -23,6 +23,7 @@ import {
   FourColorBar,
   ResilientImage,
 } from '../components/WebsiteSections';
+import { SparkItRegistrationFormSection } from '../components/SparkItRegistrationForm';
 
 export interface EventPageSharedProps {
   onOpenEnrol: () => void;
@@ -1090,124 +1091,8 @@ export const SparkItEventPage: React.FC<EventPageSharedProps> = ({
         </div>
       </section>
 
-      {/* 1C. EMBEDDED REGISTRATION SECTION: REGISTER FOR SPARK IT — NOVEMBER 2026 */}
-      <section
-        id="register-spark-it-november-2026"
-        aria-labelledby="spark-it-registration-heading"
-        className="w-full py-16 lg:py-24 bg-white border-b border-[#e3e5f0] scroll-mt-20"
-      >
-        <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-20 2xl:px-24">
-          <div className="max-w-5xl mx-auto">
-            {/* Section Header */}
-            <div className="mb-8">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-md bg-[#1c3f9c] text-white mb-3">
-                <FileText className="w-3.5 h-3.5 text-[#fdc12e] shrink-0" />
-                <span className="font-montserrat font-extrabold text-xs uppercase tracking-widest text-[#fdc12e]">
-                  Official Event Registration · {UPCOMING_SPARK_IT_NOVEMBER_2026.date}
-                </span>
-              </div>
-              <h2
-                id="spark-it-registration-heading"
-                className="font-montserrat font-extrabold text-2xl sm:text-4xl text-[#061539]"
-              >
-                Register for Spark It — November 2026
-              </h2>
-              <p className="font-merriweather text-sm sm:text-base text-[#454545] mt-2.5 max-w-3xl leading-relaxed">
-                Complete your official registration below to secure your place for{' '}
-                <strong>{UPCOMING_SPARK_IT_NOVEMBER_2026.title}</strong> (
-                <em>{UPCOMING_SPARK_IT_NOVEMBER_2026.tagline}</em>). You can fill in
-                all fields and submit your registration directly inside this page
-                without navigating away from the website.
-              </p>
-            </div>
-
-            {/* Embedded Google Form Container — Integrated Seamlessly as Part of Website */}
-            <div className="rounded-2xl border-2 border-[#1c3f9c] bg-white overflow-hidden shadow-md">
-              {/* Brainbench Signature Multi-Color Accent Bar */}
-              <div className="h-2.5 w-full bg-gradient-to-r from-[#1c3f9c] via-[#d91f26] via-[#f7941d] to-[#1c3f9c]" />
-
-              {/* Form Portal Header Bar */}
-              <div className="px-5 sm:px-8 py-3.5 bg-[#061539] text-white flex flex-wrap items-center justify-between gap-3 border-b border-[#1c3f9c]/30">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-[#1c3f9c] flex items-center justify-center shrink-0">
-                    <FileText className="w-4 h-4 text-[#fdc12e]" />
-                  </div>
-                  <div>
-                    <div className="font-montserrat font-bold text-xs sm:text-sm text-white">
-                      Brainbench Spark It — Registration Portal
-                    </div>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className="w-2 h-2 rounded-full bg-[#00ba51] animate-pulse shrink-0" />
-                      <span className="font-montserrat font-semibold text-[11px] text-[#fdc12e]">
-                        Official Registration Active · November 2026 Edition
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <a
-                  href={UPCOMING_SPARK_IT_NOVEMBER_2026.registrationFormUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-3.5 py-1.5 bg-white/10 hover:bg-white/20 text-white font-montserrat font-semibold text-xs rounded-md inline-flex items-center gap-1.5 transition-colors border border-white/20"
-                  title="Open the registration form in a new tab if required"
-                >
-                  <span>Open in New Tab</span>
-                  <ExternalLink className="w-3.5 h-3.5 text-[#fdc12e]" />
-                </a>
-              </div>
-
-              {/* Embedded Google Form Frame */}
-              <div className="relative w-full bg-white">
-                <iframe
-                  src={UPCOMING_SPARK_IT_NOVEMBER_2026.registrationFormEmbedUrl}
-                  title="Brainbench Spark It — November 2026 Registration Form"
-                  width="100%"
-                  height="1500"
-                  frameBorder="0"
-                  marginHeight={0}
-                  marginWidth={0}
-                  className="w-full h-[1350px] sm:h-[1550px] lg:h-[1750px] border-0 block bg-white"
-                  loading="eager"
-                  allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-                >
-                  Loading Brainbench Spark It registration form…
-                </iframe>
-              </div>
-
-              {/* Persistent Helper & Privacy Bar Below Form */}
-              <div className="px-6 py-4 bg-[#F8F9FC] text-[#121212] flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-[#e3e5f0]">
-                <p className="font-merriweather text-xs text-[#555] leading-relaxed">
-                  Submissions are received securely by Brainbench Technology. Need assistance or have questions? Contact us at{' '}
-                  <a
-                    href="mailto:info@bbtechng.com"
-                    className="text-[#1c3f9c] font-bold hover:underline"
-                  >
-                    info@bbtechng.com
-                  </a>{' '}
-                  or call{' '}
-                  <a
-                    href="tel:+2348160993158"
-                    className="text-[#1c3f9c] font-bold hover:underline"
-                  >
-                    +234 816 099 3158
-                  </a>
-                  .
-                </p>
-                <a
-                  href={UPCOMING_SPARK_IT_NOVEMBER_2026.registrationFormUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-[#1c3f9c] hover:underline font-montserrat font-bold inline-flex items-center gap-1 shrink-0"
-                >
-                  <span>Google Forms External Fallback</span>
-                  <ExternalLink className="w-3.5 h-3.5 shrink-0" />
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* 1C. NATIVE MULTI-COLUMN & SEAMLESS GOOGLE FORM REGISTRATION SECTION */}
+      <SparkItRegistrationFormSection />
 
       {/* 2. PROGRAMME INTRODUCTION & OFFICIAL PROGRAMME DETAILS */}
       <section className="w-full py-20 lg:py-28 bg-white border-b border-[#e3e5f0]">

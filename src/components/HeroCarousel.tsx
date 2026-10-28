@@ -27,40 +27,23 @@ interface HeroSlideData {
   objectPosition: string;
 }
 
-const DEFAULT_VERIFIED_HERO_IMAGE = '/images/figma/f064034f.jpg';
+const DEFAULT_VERIFIED_HERO_IMAGE = '/images/figma/667d731b.jpg';
 
 const HERO_SLIDES: HeroSlideData[] = [
   {
-    id: 'slide-course-catalogue-figma',
-    isFigmaCatalogueSlide: true,
-    category: '2026 PRICE LIST',
-    headline: 'Course Catalogue',
+    id: 'slide-brainbench-solutions',
+    category: 'BRAINBENCH SOFTWARE SOLUTIONS',
+    headline: 'Brainbench Solutions',
     description:
-      'A complete guide to our tech, design, data, and professional development programmes, built to sharpen skills and open new career paths.',
-    primaryCtaLabel: 'Explore Courses',
-    primaryCtaRoute: '/courses#course-list',
-    secondaryCtaLabel: 'Browse Skill Categories',
-    secondaryCtaRoute: '/courses#categories',
-    imageUrl: COVER_DATA.heroPersonUrl,
+      'Empowering schools, institutions, and organisations with ULTRA CBT for computer-based testing, PORTAL PRO for campus administration, and LMS E-LIBRARY for digital learning.',
+    primaryCtaLabel: 'Explore Our Solutions',
+    primaryCtaRoute: '/solutions',
+    secondaryCtaLabel: 'Request a Demo',
+    secondaryCtaRoute: '/solutions#request-demo',
+    imageUrl: '/images/figma/667d731b.jpg',
     fallbackImageUrl: '/images/figma/f064034f.jpg',
     imageAlt:
-      'Brainbench Technology 2026 Course Catalogue & Price List featured student portrait',
-    objectPosition: '50% 10%',
-  },
-  {
-    id: 'slide-brainbench-technology',
-    category: 'TECHNOLOGY EDUCATION',
-    headline: 'Learn Today. Build Tomorrow.',
-    description:
-      'Develop practical technology skills and discover opportunities to innovate, create, and thrive in the digital economy.',
-    primaryCtaLabel: 'Discover Brainbench',
-    primaryCtaRoute: '/about',
-    secondaryCtaLabel: 'Explore Courses',
-    secondaryCtaRoute: '/courses',
-    imageUrl: '/images/figma/f064034f.jpg',
-    fallbackImageUrl: '/images/figma/667d731b.jpg',
-    imageAlt:
-      'Brainbench Technology instructor and students during a practical classroom training session',
+      'Brainbench Solutions — ULTRA CBT, PORTAL PRO, and LMS E-LIBRARY institutional software suites',
     objectPosition: 'center 35%',
   },
   {
@@ -110,6 +93,39 @@ const HERO_SLIDES: HeroSlideData[] = [
     imageAlt:
       'BRAINBENCH SPARK IT academic programme project presentation at the interactive smartboard',
     objectPosition: 'center 28%',
+  },
+  {
+    id: 'slide-course-catalogue-figma',
+    isFigmaCatalogueSlide: true,
+    category: '2026 PRICE LIST',
+    headline: 'Course Catalogue',
+    description:
+      'A complete guide to our tech, design, data, and professional development programmes, built to sharpen skills and open new career paths.',
+    primaryCtaLabel: 'Explore Courses',
+    primaryCtaRoute: '/courses#course-list',
+    secondaryCtaLabel: 'Browse Skill Categories',
+    secondaryCtaRoute: '/courses#categories',
+    imageUrl: COVER_DATA.heroPersonUrl,
+    fallbackImageUrl: '/images/figma/f064034f.jpg',
+    imageAlt:
+      'Brainbench Technology 2026 Course Catalogue & Price List featured student portrait',
+    objectPosition: '50% 10%',
+  },
+  {
+    id: 'slide-brainbench-technology',
+    category: 'TECHNOLOGY EDUCATION',
+    headline: 'Learn Today. Build Tomorrow.',
+    description:
+      'Develop practical technology skills and discover opportunities to innovate, create, and thrive in the digital economy.',
+    primaryCtaLabel: 'Discover Brainbench',
+    primaryCtaRoute: '/about',
+    secondaryCtaLabel: 'Explore Courses',
+    secondaryCtaRoute: '/courses',
+    imageUrl: '/images/figma/f064034f.jpg',
+    fallbackImageUrl: '/images/figma/667d731b.jpg',
+    imageAlt:
+      'Brainbench Technology instructor and students during a practical classroom training session',
+    objectPosition: 'center 35%',
   },
   {
     id: 'slide-practical-technology-learning',
@@ -369,7 +385,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({
               key={slide.id}
               role="group"
               aria-roledescription="slide"
-              aria-label={`Slide 1 of ${slideCount}: Course Catalogue — 2026 Price List`}
+              aria-label={`Slide ${idx + 1} of ${slideCount}: Course Catalogue — 2026 Price List`}
               aria-hidden={!isActive}
               className={`absolute inset-0 w-full h-full transition-opacity duration-600 ease-in-out ${
                 isActive

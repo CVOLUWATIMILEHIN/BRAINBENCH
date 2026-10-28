@@ -90,6 +90,16 @@ const ROUTE_META: Record<
     description:
       'Get in touch with Brainbench Technology at Brainbench Building, 47 Damilore Street, Ado-Ekiti, Ekiti State. Call +234 816 099 3158 or email info@bbtechng.com.',
   },
+  '/admin': {
+    title: 'Demo Request Admin Portal | Brainbench Technology',
+    description:
+      'Protected Brainbench Technology administration portal for managing software product demo requests.',
+  },
+  '/admin/demo-requests': {
+    title: 'Demo Request Admin Portal | Brainbench Technology',
+    description:
+      'Protected Brainbench Technology administration portal for managing ULTRA CBT, PORTAL PRO, and LMS E-LIBRARY demo requests.',
+  },
 };
 
 export const RouterProvider: React.FC<{ children: React.ReactNode }> = ({

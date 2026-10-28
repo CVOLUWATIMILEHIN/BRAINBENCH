@@ -348,6 +348,228 @@ export function validateContactInquiryForm(
   };
 }
 
+export const ALLOWED_DEMO_PRODUCTS = [
+  'ULTRA CBT',
+  'PORTAL PRO',
+  'LMS E-LIBRARY',
+] as const;
+export type AllowedDemoProduct = (typeof ALLOWED_DEMO_PRODUCTS)[number];
+
+export const ALLOWED_DEMO_STATUSES = [
+  'New',
+  'Contacted',
+  'Demo Scheduled',
+  'Completed',
+  'Closed',
+] as const;
+export type AllowedDemoStatus = (typeof ALLOWED_DEMO_STATUSES)[number];
+
+export interface DemoRequestFormInput {
+  fullName: string;
+  organisation: string;
+  email: string;
+  phone: string;
+  product: string;
+  preferredDate?: string;
+  message?: string;
+  honeypot?: string;
+}
+
+export interface ValidatedDemoRequestData {
+  fullName: string;
+  organisation: string;
+  email: string;
+  phone: string;
+  product: AllowedDemoProduct;
+  preferredDate: string;
+  message: string;
+}
+
+const DATE_ISO_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+export function validateDemoRequestForm(
+  input: DemoRequestFormInput
+): ValidationResult<ValidatedDemoRequestData> {
+  // 1. Check anti-automation honeypot field
+  if (input.honeypot && input.honeypot.trim().length > 0) {
+    logSecurityEvent(
+      'BOT_HONEYPOT_TRIGGERED',
+      'demo_request_form',
+      'Hidden honeypot field was populated'
+    );
+    return {
+      valid: false,
+      error: 'Unable to process request. Please refresh the page and try again.',
+    };
+  }
+
+  // 2. Validate full name (2-100 chars)
+  const fullName = sanitizeTextInput(input.fullName || '', 100);
+  if (!fullName || !NAME_PATTERN.test(fullName)) {
+    logSecurityEvent(
+      'VALIDATION_REJECTED',
+      'demo_request_form',
+      'Invalid fullName format or length'
+    );
+    return {
+      valid: false,
+      error:
+        'Please enter your full name (2–100 characters, letters and standard punctuation only).',
+    };
+  }
+
+  // 3. Validate organisation or institution (2-140 chars)
+  const organisation = sanitizeTextInput(input.organisation || '', 140);
+  if (!organisation || organisation.length < 2) {
+    logSecurityEvent(
+      'VALIDATION_REJECTED',
+      'demo_request_form',
+      'Invalid organisation length'
+    );
+    return {
+      valid: false,
+      error:
+        'Please enter the name of your organisation, school, or institution (2–140 characters).',
+    };
+  }
+
+  // 4. Validate work email (5-120 chars)
+  const email = sanitizeTextInput(input.email || '', 120).toLowerCase();
+  if (!email || email.length < 5 || !EMAIL_PATTERN.test(email)) {
+    logSecurityEvent(
+      'VALIDATION_REJECTED',
+      'demo_request_form',
+      'Invalid email format'
+    );
+    return {
+      valid: false,
+      error:
+        'Please enter a valid work or institutional email address (e.g. admin@yourschool.edu.ng).',
+    };
+  }
+
+  // 5. Validate phone number (7-20 chars, 7-15 digits)
+  const phone = sanitizeTextInput(input.phone || '', 20);
+  const digitCount = phone.replace(/\D/g, '').length;
+  if (!phone || !PHONE_PATTERN.test(phone) || digitCount < 7 || digitCount > 15) {
+    logSecurityEvent(
+      'VALIDATION_REJECTED',
+      'demo_request_form',
+      'Invalid phone format or digit count'
+    );
+    return {
+      valid: false,
+      error:
+        'Please enter a valid phone or WhatsApp number (7–15 digits, e.g. +234 803 000 0000).',
+    };
+  }
+
+  // 6. Validate selected product against strict allowlist
+  const productRaw = sanitizeTextInput(input.product || '', 40).toUpperCase();
+  if (!ALLOWED_DEMO_PRODUCTS.includes(productRaw as AllowedDemoProduct)) {
+    logSecurityEvent(
+      'VALIDATION_REJECTED',
+      'demo_request_form',
+      'Invalid product selection'
+    );
+    return {
+      valid: false,
+      error:
+        'Please select a valid Brainbench product of interest (ULTRA CBT, PORTAL PRO, or LMS E-LIBRARY).',
+    };
+  }
+
+  // 7. Validate optional preferred demo date
+  const preferredDate = sanitizeTextInput(input.preferredDate || '', 30);
+  if (preferredDate) {
+    if (!DATE_ISO_PATTERN.test(preferredDate)) {
+      return {
+        valid: false,
+        error: 'Please select a valid preferred demo date (YYYY-MM-DD).',
+      };
+    }
+    const parsedTime = Date.parse(`${preferredDate}T00:00:00`);
+    if (Number.isNaN(parsedTime)) {
+      return {
+        valid: false,
+        error: 'Please enter a valid calendar date for your preferred demo.',
+      };
+    }
+  }
+
+  // 8. Validate optional additional message (0-1500 chars)
+  const message = sanitizeTextInput(input.message || '', 1500);
+
+  return {
+    valid: true,
+    data: {
+      fullName,
+      organisation,
+      email,
+      phone,
+      product: productRaw as AllowedDemoProduct,
+      preferredDate,
+      message,
+    },
+  };
+}
+
+const inMemoryDuplicateStore: Record<string, number> = {};
+
+/**
+ * Prevents accidental or automated duplicate form submissions with identical
+ * email + organisation + product within a cooldown window (default 3 minutes).
+ */
+export function checkAndRecordDuplicateSubmission(
+  email: string,
+  organisation: string,
+  product: string,
+  cooldownMs = 3 * 60 * 1000
+): { duplicate: boolean; message?: string } {
+  const signature = `${email.trim().toLowerCase()}|${organisation
+    .trim()
+    .toLowerCase()}|${product.trim().toUpperCase()}`;
+  const storageKey = 'bbt_dup_demo_submissions';
+  const now = Date.now();
+  let map: Record<string, number> = { ...inMemoryDuplicateStore };
+
+  try {
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      const raw = window.sessionStorage.getItem(storageKey);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') {
+          map = { ...map, ...parsed };
+        }
+      }
+    }
+  } catch {
+    // Fallback to in-memory map
+  }
+
+  const lastSubmittedAt = map[signature];
+  if (typeof lastSubmittedAt === 'number' && now - lastSubmittedAt < cooldownMs) {
+    return {
+      duplicate: true,
+      message:
+        'A demo request for this product and organisation was just submitted. Our team has received it and will be in touch shortly.',
+    };
+  }
+
+  map[signature] = now;
+  inMemoryDuplicateStore[signature] = now;
+
+  try {
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      window.sessionStorage.setItem(storageKey, JSON.stringify(map));
+    }
+  } catch {
+    // Ignore storage errors
+  }
+
+  return { duplicate: false };
+}
+
 /**
  * Generates a cryptographically strong reference code using the Web Crypto API
  * instead of predictable Math.random().
