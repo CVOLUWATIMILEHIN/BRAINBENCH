@@ -26,14 +26,17 @@ import {
   Lock,
   Mail,
   MapPin,
+  Maximize2,
   Phone,
   Server,
   ShieldCheck,
   Zap,
 } from 'lucide-react';
+import { ResilientImage } from '../components/WebsiteSections';
 
 interface SolutionsPageProps {
   onOpenEnrol?: () => void;
+  onOpenLightbox?: (imageUrl: string, caption: string, label: string) => void;
 }
 
 export interface SolutionProduct {
@@ -57,6 +60,9 @@ export interface SolutionProduct {
     security: string;
     compatibility: string;
   };
+  imageUrl: string;
+  imageAlt: string;
+  imageCaption: string;
   ctaLabel: string;
 }
 
@@ -112,6 +118,11 @@ export const SOLUTIONS_DATA: SolutionProduct[] = [
       security: 'End-to-end session encryption, time-lock seals, and access controls',
       compatibility: 'Windows, macOS, Linux, ChromeOS, and standard web browsers',
     },
+    imageUrl: '/images/solutions/ultra-cbt.png',
+    imageAlt:
+      'UltraCBT by Brainbench Technology — Student Exam Dashboard displaying available, upcoming, and completed computer-based examinations alongside exam instructions',
+    imageCaption:
+      'ULTRA CBT Candidate Dashboard — Live available exams, scheduled papers, exam rules, and instant completion records',
     ctaLabel: 'Explore ULTRA CBT',
   },
   {
@@ -165,6 +176,11 @@ export const SOLUTIONS_DATA: SolutionProduct[] = [
       security: 'Role-Based Access Control (RBAC), daily backups, SSL/TLS encryption',
       compatibility: 'Responsive web application accessible on phones, tablets, and PCs',
     },
+    imageUrl: '/images/solutions/portal-pro.png',
+    imageAlt:
+      'PORTAL PRO by Brainbench Technology — Secure student portal interface for course registration, academic records, and result management',
+    imageCaption:
+      'PORTAL PRO Student & Campus Portal — Unified login for course registration, terminal results, and institutional academic records',
     ctaLabel: 'Explore Portal Pro',
   },
   {
@@ -218,14 +234,24 @@ export const SOLUTIONS_DATA: SolutionProduct[] = [
       security: 'Digital rights controls, watermarking, student login authentication',
       compatibility: 'Web-based e-reader compatible with PDF, ePub, MP4, and standard formats',
     },
+    imageUrl: '/images/solutions/lms-elibrary.png',
+    imageAlt:
+      'LMS E-LIBRARY by Brainbench Technology — Student learning dashboard showing active courses, progress tracking, announcements, live classes, deadlines, and digital resources',
+    imageCaption:
+      'LMS E-LIBRARY Student Learning Hub — Digital resources, course progress tracking, assignments, quizzes, and live class schedules',
     ctaLabel: 'Explore LMS E-Library',
   },
 ];
 
-export const SolutionsPage: React.FC<SolutionsPageProps> = () => {
+export const SolutionsPage: React.FC<SolutionsPageProps> = ({
+  onOpenLightbox,
+}) => {
   const [activeSolutionId, setActiveSolutionId] = useState<
     'ultra-cbt' | 'portal-pro' | 'lms-elibrary'
   >('ultra-cbt');
+
+  const activeHeroSolution =
+    SOLUTIONS_DATA.find((s) => s.id === activeSolutionId) || SOLUTIONS_DATA[0];
 
   // Demo Request Form State
   const [fullName, setFullName] = useState('');
@@ -485,52 +511,134 @@ export const SolutionsPage: React.FC<SolutionsPageProps> = () => {
             <span className="text-[#fdc12e]">Solutions</span>
           </nav>
 
-          <div className="max-w-4xl">
-            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/15 mb-6">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#fdc12e] animate-pulse" />
-              <span className="font-montserrat font-extrabold text-xs sm:text-[13px] tracking-[0.2em] uppercase text-[#fdc12e]">
-                BRAINBENCH TECHNOLOGY SOFTWARE PRODUCTS
-              </span>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+            <div className="lg:col-span-7">
+              <div className="inline-flex items-center gap-2.5 mb-5">
+                <span className="w-7 h-[2.5px] bg-[#f58220] rounded-full shrink-0" />
+                <span className="font-montserrat font-extrabold text-xs sm:text-[13px] tracking-[0.2em] uppercase text-[#fdc12e]">
+                  BRAINBENCH TECHNOLOGY SOFTWARE PRODUCTS
+                </span>
+              </div>
+
+              <h1 className="font-montserrat font-black text-3xl sm:text-5xl lg:text-[52px] leading-[1.08] tracking-tight text-white">
+                Institutional Software Solutions Built for Real-World Impact.
+              </h1>
+
+              <p className="font-merriweather text-base sm:text-lg text-white/90 leading-relaxed mt-6 max-w-2xl">
+                Modernise your school, college, or examination center with
+                Brainbench Technology’s battle-tested software suites. From
+                high-stakes computer-based testing with <strong>ULTRA CBT</strong>,
+                to digital campus administration with <strong>PORTAL PRO</strong>,
+                and comprehensive academic research with <strong>LMS E-LIBRARY</strong>,
+                we deliver reliable, secure, and locally supported digital tools.
+              </p>
+
+              <div className="mt-9 flex flex-wrap items-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => handleScrollToDemo()}
+                  className="px-7 py-4 bg-[#f58220] hover:bg-[#fdc12e] text-[#121212] font-montserrat font-extrabold text-sm rounded-lg inline-flex items-center gap-2.5 shadow-md transition-all cursor-pointer"
+                >
+                  <span>Request a Demo</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+
+                <a
+                  href="#products-overview"
+                  className="px-7 py-4 bg-white/10 hover:bg-white/20 text-white border border-white/30 font-montserrat font-bold text-sm rounded-lg inline-flex items-center gap-2 transition-colors cursor-pointer"
+                >
+                  <span>Explore Products</span>
+                  <Layers className="w-4 h-4" />
+                </a>
+
+                <Link
+                  to="/courses"
+                  className="px-4 py-3 text-white/80 hover:text-white font-montserrat font-semibold text-xs sm:text-sm inline-flex items-center gap-2 hover:underline transition-colors"
+                >
+                  <span>Looking for student courses? View Course Catalogue</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
             </div>
 
-            <h1 className="font-montserrat font-black text-3xl sm:text-5xl lg:text-[56px] leading-[1.08] tracking-tight text-white">
-              Institutional Software Solutions Built for Real-World Impact.
-            </h1>
+            {/* Right 5 Columns: Interactive Live Product Interface Showcase */}
+            <div className="lg:col-span-5">
+              <div className="rounded-2xl border border-white/15 bg-white/5 backdrop-blur-sm p-3 sm:p-4 shadow-2xl">
+                {/* Interactive Product Switcher Tabs */}
+                <div
+                  role="tablist"
+                  aria-label="Preview Brainbench software solutions"
+                  className="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-[#040f2a] border border-white/10 mb-3"
+                >
+                  {SOLUTIONS_DATA.map((item) => {
+                    const isSelected = activeHeroSolution.id === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        role="tab"
+                        aria-selected={isSelected}
+                        onClick={() => setActiveSolutionId(item.id)}
+                        className={`px-2.5 py-2 rounded-lg font-montserrat font-extrabold text-[11px] transition-colors whitespace-nowrap truncate cursor-pointer ${
+                          isSelected
+                            ? 'bg-[#f58220] text-[#061539]'
+                            : 'text-white/75 hover:text-white hover:bg-white/10'
+                        }`}
+                      >
+                        {item.name}
+                      </button>
+                    );
+                  })}
+                </div>
 
-            <p className="font-merriweather text-base sm:text-lg text-white/90 leading-relaxed mt-6 max-w-3xl">
-              Modernise your school, college, or examination center with
-              Brainbench Technology’s battle-tested software suites. From
-              high-stakes computer-based testing with <strong>ULTRA CBT</strong>,
-              to digital campus administration with <strong>PORTAL PRO</strong>,
-              and comprehensive academic research with <strong>LMS E-LIBRARY</strong>,
-              we deliver reliable, secure, and locally supported digital tools.
-            </p>
+                {/* Product Screen Frame */}
+                <div
+                  onClick={() =>
+                    onOpenLightbox?.(
+                      activeHeroSolution.imageUrl,
+                      activeHeroSolution.imageCaption,
+                      `${activeHeroSolution.name} — Interface Preview`
+                    )
+                  }
+                  className={`group relative rounded-xl overflow-hidden bg-white border border-white/20 aspect-[16/11] flex items-center justify-center p-2 ${
+                    onOpenLightbox ? 'cursor-pointer' : ''
+                  }`}
+                >
+                  <ResilientImage
+                    src={activeHeroSolution.imageUrl}
+                    alt={activeHeroSolution.imageAlt}
+                    className="w-full h-full object-contain transition-transform duration-200 group-hover:scale-[1.015]"
+                  />
+                  {onOpenLightbox && (
+                    <span className="absolute bottom-2.5 right-2.5 px-2.5 py-1.5 rounded-lg bg-[#061539]/90 text-white font-montserrat font-bold text-[11px] inline-flex items-center gap-1.5 shadow-sm">
+                      <Maximize2 className="w-3.5 h-3.5 text-[#fdc12e]" />
+                      <span>Full View</span>
+                    </span>
+                  )}
+                </div>
 
-            <div className="mt-9 flex flex-wrap items-center gap-4">
-              <button
-                type="button"
-                onClick={() => handleScrollToDemo()}
-                className="px-7 py-4 bg-[#f58220] hover:bg-[#fdc12e] text-[#121212] font-montserrat font-extrabold text-sm rounded-lg inline-flex items-center gap-2.5 shadow-md transition-all cursor-pointer"
-              >
-                <span>Request a Demo</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-
-              <a
-                href="#products-overview"
-                className="px-7 py-4 bg-white/10 hover:bg-white/20 text-white border border-white/30 font-montserrat font-bold text-sm rounded-lg inline-flex items-center gap-2 transition-colors cursor-pointer"
-              >
-                <span>Explore Products</span>
-                <Layers className="w-4 h-4" />
-              </a>
-
-              <Link
-                to="/courses"
-                className="px-6 py-4 text-white/80 hover:text-white font-montserrat font-semibold text-xs sm:text-sm inline-flex items-center gap-2 hover:underline transition-colors"
-              >
-                <span>Looking for student courses? View Course Catalogue</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
+                {/* Caption & Deep-Dive Jump */}
+                <div className="mt-3 px-1 flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="font-montserrat font-extrabold text-xs text-[#fdc12e] truncate">
+                      {activeHeroSolution.name} · {activeHeroSolution.code}
+                    </div>
+                    <p className="font-merriweather text-[11px] text-white/80 truncate mt-0.5">
+                      {activeHeroSolution.tagline}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleProductSelectAndScroll(activeHeroSolution.id)
+                    }
+                    className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white font-montserrat font-bold text-[11px] inline-flex items-center gap-1 shrink-0 transition-colors cursor-pointer whitespace-nowrap"
+                  >
+                    <span>Details</span>
+                    <ArrowRight className="w-3 h-3 text-[#fdc12e]" />
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -658,11 +766,23 @@ export const SolutionsPage: React.FC<SolutionsPageProps> = () => {
                   }`}
                 >
                   <div>
-                    <div className="flex items-center justify-between gap-2 mb-4">
-                      <span className="font-mono-tabular font-bold text-xs px-2.5 py-1 rounded bg-[#061539] text-[#fdc12e]">
+                    {/* Product Interface Preview Thumbnail */}
+                    <div className="mb-5 rounded-xl border border-[#e3e5f0] bg-[#F8F9FC] p-2.5 aspect-[16/10] overflow-hidden flex items-center justify-center">
+                      <ResilientImage
+                        src={product.imageUrl}
+                        alt={product.imageAlt}
+                        className="w-full h-full object-contain rounded-lg"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between gap-2 mb-3 text-[11px] font-montserrat font-bold text-[#1c3f9c]">
+                      <span className="font-mono-tabular text-[#061539]">
                         {product.code}
                       </span>
-                      <span className="font-montserrat font-bold text-[11px] px-3 py-1 rounded-full bg-[#fdf6e7] text-[#092279] border border-[#eadfc9]">
+                      <span aria-hidden="true" className="text-[#cbd5e1]">
+                        /
+                      </span>
+                      <span className="text-[#454545] truncate">
                         {product.badge}
                       </span>
                     </div>
@@ -787,8 +907,41 @@ export const SolutionsPage: React.FC<SolutionsPageProps> = () => {
               </div>
             </div>
 
-            {/* Right 5 Columns: Specification & Architecture Card */}
+            {/* Right 5 Columns: Product Interface Preview + Specification & Architecture Card */}
             <div className="lg:col-span-5 space-y-6">
+              {/* Official ULTRA CBT Product Interface Preview */}
+              <div
+                onClick={() =>
+                  onOpenLightbox?.(
+                    SOLUTIONS_DATA[0].imageUrl,
+                    SOLUTIONS_DATA[0].imageCaption,
+                    'ULTRA CBT — Product Interface'
+                  )
+                }
+                className={`group rounded-2xl border-2 border-[#1c3f9c]/25 bg-[#F8F9FC] p-3 shadow-sm overflow-hidden transition-all hover:border-[#1c3f9c] ${
+                  onOpenLightbox ? 'cursor-pointer' : ''
+                }`}
+              >
+                <div className="rounded-xl overflow-hidden bg-white border border-[#e3e5f0]">
+                  <ResilientImage
+                    src={SOLUTIONS_DATA[0].imageUrl}
+                    alt={SOLUTIONS_DATA[0].imageAlt}
+                    className="w-full h-auto object-contain block transition-transform duration-200 group-hover:scale-[1.01]"
+                  />
+                </div>
+                <div className="mt-3 px-1.5 flex items-center justify-between gap-3 text-[11px] font-montserrat">
+                  <span className="font-bold text-[#061539] truncate">
+                    ULTRA CBT · Candidate Exam Dashboard
+                  </span>
+                  {onOpenLightbox && (
+                    <span className="inline-flex items-center gap-1 font-extrabold text-[#1c3f9c] shrink-0 whitespace-nowrap">
+                      <Maximize2 className="w-3.5 h-3.5" />
+                      <span>Enlarge</span>
+                    </span>
+                  )}
+                </div>
+              </div>
+
               <div className="bg-[#061539] text-white rounded-2xl p-7 sm:p-8 shadow-xl border border-[#1c3f9c]/40">
                 <div className="flex items-center justify-between pb-5 border-b border-white/15">
                   <div className="flex items-center gap-2">
@@ -885,8 +1038,41 @@ export const SolutionsPage: React.FC<SolutionsPageProps> = () => {
       >
         <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-20 2xl:px-24">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-            {/* Left 5 Columns: System Architecture & Modules */}
+            {/* Left 5 Columns: Product Interface Preview + System Architecture & Modules */}
             <div className="lg:col-span-5 order-2 lg:order-1 space-y-6">
+              {/* Official PORTAL PRO Product Interface Preview */}
+              <div
+                onClick={() =>
+                  onOpenLightbox?.(
+                    SOLUTIONS_DATA[1].imageUrl,
+                    SOLUTIONS_DATA[1].imageCaption,
+                    'PORTAL PRO — Product Interface'
+                  )
+                }
+                className={`group rounded-2xl border-2 border-[#092279]/25 bg-white p-3 shadow-sm overflow-hidden transition-all hover:border-[#092279] ${
+                  onOpenLightbox ? 'cursor-pointer' : ''
+                }`}
+              >
+                <div className="rounded-xl overflow-hidden bg-[#F8F9FC] border border-[#e3e5f0]">
+                  <ResilientImage
+                    src={SOLUTIONS_DATA[1].imageUrl}
+                    alt={SOLUTIONS_DATA[1].imageAlt}
+                    className="w-full h-auto object-contain block transition-transform duration-200 group-hover:scale-[1.01]"
+                  />
+                </div>
+                <div className="mt-3 px-1.5 flex items-center justify-between gap-3 text-[11px] font-montserrat">
+                  <span className="font-bold text-[#092279] truncate">
+                    PORTAL PRO · Student &amp; Campus Access Portal
+                  </span>
+                  {onOpenLightbox && (
+                    <span className="inline-flex items-center gap-1 font-extrabold text-[#f58220] shrink-0 whitespace-nowrap">
+                      <Maximize2 className="w-3.5 h-3.5" />
+                      <span>Enlarge</span>
+                    </span>
+                  )}
+                </div>
+              </div>
+
               <div className="bg-[#092279] text-white rounded-2xl p-7 sm:p-8 shadow-xl border border-[#092279]/40">
                 <div className="flex items-center justify-between pb-5 border-b border-white/15">
                   <div className="flex items-center gap-2">
@@ -1129,8 +1315,41 @@ export const SolutionsPage: React.FC<SolutionsPageProps> = () => {
               </div>
             </div>
 
-            {/* Right 5 Columns: Specification & Architecture Card */}
+            {/* Right 5 Columns: Product Interface Preview + Specification & Architecture Card */}
             <div className="lg:col-span-5 space-y-6">
+              {/* Official LMS E-LIBRARY Product Interface Preview */}
+              <div
+                onClick={() =>
+                  onOpenLightbox?.(
+                    SOLUTIONS_DATA[2].imageUrl,
+                    SOLUTIONS_DATA[2].imageCaption,
+                    'LMS E-LIBRARY — Product Interface'
+                  )
+                }
+                className={`group rounded-2xl border-2 border-[#059669]/25 bg-[#F8F9FC] p-3 shadow-sm overflow-hidden transition-all hover:border-[#059669] ${
+                  onOpenLightbox ? 'cursor-pointer' : ''
+                }`}
+              >
+                <div className="rounded-xl overflow-hidden bg-white border border-[#e3e5f0]">
+                  <ResilientImage
+                    src={SOLUTIONS_DATA[2].imageUrl}
+                    alt={SOLUTIONS_DATA[2].imageAlt}
+                    className="w-full h-auto object-contain block transition-transform duration-200 group-hover:scale-[1.01]"
+                  />
+                </div>
+                <div className="mt-3 px-1.5 flex items-center justify-between gap-3 text-[11px] font-montserrat">
+                  <span className="font-bold text-[#042f2e] truncate">
+                    LMS E-LIBRARY · Student Learning &amp; Resource Hub
+                  </span>
+                  {onOpenLightbox && (
+                    <span className="inline-flex items-center gap-1 font-extrabold text-[#059669] shrink-0 whitespace-nowrap">
+                      <Maximize2 className="w-3.5 h-3.5" />
+                      <span>Enlarge</span>
+                    </span>
+                  )}
+                </div>
+              </div>
+
               <div className="bg-[#042f2e] text-white rounded-2xl p-7 sm:p-8 shadow-xl border border-[#059669]/40">
                 <div className="flex items-center justify-between pb-5 border-b border-white/15">
                   <div className="flex items-center gap-2">

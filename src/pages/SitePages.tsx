@@ -446,8 +446,11 @@ interface ProgrammesPageProps {
 
 export const ProgrammesPage: React.FC<ProgrammesPageProps> = ({
   onOpenEnrol,
+  onOpenLightbox,
 }) => {
-  return <SolutionsPage onOpenEnrol={onOpenEnrol} />;
+  return (
+    <SolutionsPage onOpenEnrol={onOpenEnrol} onOpenLightbox={onOpenLightbox} />
+  );
 };
 
 /* ============================================================================

@@ -508,7 +508,12 @@ export default function App() {
             onClearSelectedCourses={() => setSelectedCourseIds([])}
           />
         ) : currentPath === '/solutions' || currentPath === '/programmes' ? (
-          <SolutionsPage onOpenEnrol={() => setIsEnrolModalOpen(true)} />
+          <SolutionsPage
+            onOpenEnrol={() => setIsEnrolModalOpen(true)}
+            onOpenLightbox={(imageUrl, caption, label) =>
+              setLightboxData({ imageUrl, caption, label })
+            }
+          />
         ) : currentPath === '/events' ? (
           <EventsOverviewPage
             onOpenEnrol={() => setIsEnrolModalOpen(true)}
