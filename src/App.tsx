@@ -44,7 +44,6 @@ import {
   ProgrammesPage,
   SolutionsPage,
 } from './pages/SitePages';
-import { AdminDemoRequestsPage } from './pages/AdminDemoRequestsPage';
 import { Link, useRouter } from './router';
 import { sanitizeDomId, sanitizeSearchQuery } from './utils/security';
 import {
@@ -533,9 +532,6 @@ export default function App() {
           />
         ) : currentPath === '/contact' ? (
           <ContactPage onOpenEnrol={() => setIsEnrolModalOpen(true)} />
-        ) : currentPath === '/admin/demo-requests' ||
-          currentPath === '/admin' ? (
-          <AdminDemoRequestsPage />
         ) : (
           /* =================================================================
               HOME PAGE (/) — Preserves Full Landing Page + Multi-Page Links
@@ -1825,12 +1821,6 @@ export default function App() {
               © 2026 Brainbench Technology. {BACK_COVER_DATA.disclaimer}
             </div>
             <div className="flex items-center gap-6 font-montserrat font-semibold">
-              <Link
-                to="/admin/demo-requests"
-                className="text-white/50 hover:text-white transition-colors"
-              >
-                Admin Portal
-              </Link>
               <button
                 type="button"
                 onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}

@@ -27,13 +27,11 @@ const EMAIL_PATTERN =
 const PHONE_PATTERN = /^\+?[0-9\s()-]{7,20}$/;
 const DATE_ISO_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
-const DEFAULT_ADMIN_EMAIL = 'olosundelouis@gmail.com';
 const DATA_DIR = path.join(__dirname, 'data');
 const DEMO_REQUESTS_FILE = path.join(DATA_DIR, 'demo-requests.json');
 
 const ipRateLimitMap = new Map<string, number[]>();
 const duplicateSubmissionMap = new Map<string, number>();
-const adminSessions = new Map<string, { email: string; expiresAt: number }>();
 
 export interface StoredDemoRequest {
   id: string;
@@ -126,26 +124,6 @@ function generateServerReferenceCode(): string {
   const num = crypto.randomInt(100000, 999999);
   const alpha = crypto.randomBytes(3).toString('hex').toUpperCase().slice(0, 4);
   return `BBT-SOL-${num}-${alpha}`;
-}
-
-function getAuthorizedAdminEmail(): string {
-  return (process.env.ADMIN_EMAIL || DEFAULT_ADMIN_EMAIL).trim().toLowerCase();
-}
-
-function verifyAdminToken(req: Request): { valid: boolean; email?: string } {
-  const authHeader = req.headers.authorization || '';
-  const token = authHeader.startsWith('Bearer ')
-    ? authHeader.slice(7).trim()
-    : '';
-  if (!token) return { valid: false };
-
-  const session = adminSessions.get(token);
-  if (!session) return { valid: false };
-  if (Date.now() > session.expiresAt) {
-    adminSessions.delete(token);
-    return { valid: false };
-  }
-  return { valid: true, email: session.email };
 }
 
 interface ValidatedPayload {
@@ -464,82 +442,6 @@ async function startServer() {
 
   app.use(express.json({ limit: '32kb' }));
 
-  // Health & Admin Email Configuration Status Endpoint (never exposes secrets)
-  app.get('/api/admin/config-status', (_req: Request, res: Response) => {
-    const recipient = (process.env.DEMO_NOTIFICATION_EMAIL || '').trim();
-    const hasResend = Boolean((process.env.RESEND_API_KEY || '').trim());
-    const hasSmtp = Boolean(
-      (process.env.SMTP_HOST || '').trim() &&
-        (process.env.SMTP_USER || '').trim() &&
-        (process.env.SMTP_PASS || '').trim()
-    );
-
-    res.json({
-      hasNotificationEmailConfigured: Boolean(recipient),
-      hasMailTransportConfigured: hasResend || hasSmtp,
-      transportType: hasResend
-        ? 'Resend API'
-        : hasSmtp
-          ? 'SMTP'
-          : 'Not Configured',
-      configuredRecipient: recipient || null,
-      authorizedAdminEmail: getAuthorizedAdminEmail(),
-      requiresAccessCode: Boolean((process.env.ADMIN_ACCESS_CODE || '').trim()),
-    });
-  });
-
-  // Admin Portal Sign-In Endpoint
-  app.post('/api/admin/login', (req: Request, res: Response) => {
-    const body = (req.body || {}) as Record<string, unknown>;
-    const email = stripControlAndHtml(body.email, 120).toLowerCase();
-    const accessCode = stripControlAndHtml(body.accessCode, 120);
-
-    const authorizedEmail = getAuthorizedAdminEmail();
-    const configuredCode = (process.env.ADMIN_ACCESS_CODE || '').trim();
-
-    if (!email || email !== authorizedEmail) {
-      res.status(403).json({
-        ok: false,
-        error: `Access denied. Only the authorized administrator (${authorizedEmail}) may sign in.`,
-      });
-      return;
-    }
-
-    if (configuredCode && accessCode !== configuredCode) {
-      res.status(403).json({
-        ok: false,
-        error: 'Invalid administrator access code.',
-      });
-      return;
-    }
-
-    const token = crypto.randomBytes(32).toString('hex');
-    adminSessions.set(token, {
-      email: authorizedEmail,
-      expiresAt: Date.now() + 12 * 60 * 60 * 1000,
-    });
-
-    res.json({
-      ok: true,
-      token,
-      user: {
-        email: authorizedEmail,
-        displayName: 'Brainbench Administrator',
-      },
-    });
-  });
-
-  app.post('/api/admin/logout', (req: Request, res: Response) => {
-    const authHeader = req.headers.authorization || '';
-    const token = authHeader.startsWith('Bearer ')
-      ? authHeader.slice(7).trim()
-      : '';
-    if (token) {
-      adminSessions.delete(token);
-    }
-    res.json({ ok: true });
-  });
-
   // Server-side validation, spam protection, rate-limiting & reference generation
   app.post('/api/demo-requests/validate', (req: Request, res: Response) => {
     const ip = getClientIp(req);
@@ -647,112 +549,7 @@ async function startServer() {
     });
   });
 
-  // List all demo requests (Admin protected)
-  app.get('/api/demo-requests', async (req: Request, res: Response) => {
-    const authCheck = verifyAdminToken(req);
-    if (!authCheck.valid) {
-      res.status(401).json({
-        ok: false,
-        error: 'Unauthorized. Please sign in to the administrator portal.',
-      });
-      return;
-    }
-
-    const records = await readStoredDemoRequests();
-    res.json({
-      ok: true,
-      requests: records,
-    });
-  });
-
-  // Update a demo request status or notes (Admin protected)
-  app.patch('/api/demo-requests/:id', async (req: Request, res: Response) => {
-    const authCheck = verifyAdminToken(req);
-    if (!authCheck.valid) {
-      res.status(401).json({
-        ok: false,
-        error: 'Unauthorized. Please sign in to the administrator portal.',
-      });
-      return;
-    }
-
-    const targetId = stripControlAndHtml(req.params.id, 64);
-    const body = (req.body || {}) as Record<string, unknown>;
-    const records = await readStoredDemoRequests();
-    const idx = records.findIndex((r) => r.id === targetId);
-
-    if (idx === -1) {
-      res.status(404).json({
-        ok: false,
-        error: 'Demo request record not found.',
-      });
-      return;
-    }
-
-    const current = records[idx];
-    const nextStatusRaw = stripControlAndHtml(body.status, 40);
-    const nextStatus: AllowedStatus = ALLOWED_STATUSES.includes(
-      nextStatusRaw as AllowedStatus
-    )
-      ? (nextStatusRaw as AllowedStatus)
-      : current.status;
-
-    const nextNotes =
-      typeof body.notes === 'string'
-        ? stripControlAndHtml(body.notes, 3000)
-        : current.notes;
-
-    const nextNotificationStatus =
-      body.notificationStatus === 'sent' ||
-      body.notificationStatus === 'failed' ||
-      body.notificationStatus === 'unconfigured' ||
-      body.notificationStatus === 'pending'
-        ? body.notificationStatus
-        : current.notificationStatus;
-
-    const nextNotificationDetail =
-      typeof body.notificationDetail === 'string'
-        ? stripControlAndHtml(body.notificationDetail, 500)
-        : current.notificationDetail;
-
-    const updated: StoredDemoRequest = {
-      ...current,
-      status: nextStatus,
-      notes: nextNotes,
-      notificationStatus: nextNotificationStatus,
-      notificationDetail: nextNotificationDetail,
-      updatedAt: new Date().toISOString(),
-    };
-
-    records[idx] = updated;
-    await writeStoredDemoRequests(records);
-
-    res.json({
-      ok: true,
-      request: updated,
-    });
-  });
-
-  // Delete a demo request (Admin protected)
-  app.delete('/api/demo-requests/:id', async (req: Request, res: Response) => {
-    const authCheck = verifyAdminToken(req);
-    if (!authCheck.valid) {
-      res.status(401).json({
-        ok: false,
-        error: 'Unauthorized. Please sign in to the administrator portal.',
-      });
-      return;
-    }
-
-    const targetId = stripControlAndHtml(req.params.id, 64);
-    const records = await readStoredDemoRequests();
-    const nextRecords = records.filter((r) => r.id !== targetId);
-
-    await writeStoredDemoRequests(nextRecords);
-    res.json({ ok: true });
-  });
-
-  // Server-side email notification dispatch (called after persistence or admin retry)
+  // Server-side email notification dispatch (called after persistence)
   app.post('/api/demo-requests/notify', async (req: Request, res: Response) => {
     const body = (req.body || {}) as Record<string, unknown>;
     const validation = validateServerDemoPayload(body);
