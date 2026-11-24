@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from '../router';
 import {
   ALLOWED_DEMO_PRODUCTS,
@@ -15,6 +15,8 @@ import {
   Calendar,
   Check,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   Cpu,
   FileCheck,
   GraduationCap,
@@ -26,7 +28,6 @@ import {
   Lock,
   Mail,
   MapPin,
-  Maximize2,
   Phone,
   Server,
   ShieldCheck,
@@ -246,12 +247,50 @@ export const SOLUTIONS_DATA: SolutionProduct[] = [
 export const SolutionsPage: React.FC<SolutionsPageProps> = ({
   onOpenLightbox,
 }) => {
-  const [activeSolutionId, setActiveSolutionId] = useState<
-    'ultra-cbt' | 'portal-pro' | 'lms-elibrary'
-  >('ultra-cbt');
+  const [activeSlideIndex, setActiveSlideIndex] = useState(0);
+  const [timerResetKey, setTimerResetKey] = useState(0);
 
-  const activeHeroSolution =
-    SOLUTIONS_DATA.find((s) => s.id === activeSolutionId) || SOLUTIONS_DATA[0];
+  const slideCount = SOLUTIONS_DATA.length;
+  const activeHeroSolution = SOLUTIONS_DATA[activeSlideIndex] || SOLUTIONS_DATA[0];
+  const activeSolutionId = activeHeroSolution.id;
+
+  const setActiveSolutionId = useCallback(
+    (id: 'ultra-cbt' | 'portal-pro' | 'lms-elibrary') => {
+      const idx = SOLUTIONS_DATA.findIndex((s) => s.id === id);
+      if (idx !== -1) {
+        setActiveSlideIndex(idx);
+        setTimerResetKey((prev) => prev + 1);
+      }
+    },
+    []
+  );
+
+  const goToSlide = useCallback(
+    (index: number) => {
+      const normalized = ((index % slideCount) + slideCount) % slideCount;
+      setActiveSlideIndex(normalized);
+      setTimerResetKey((prev) => prev + 1);
+    },
+    [slideCount]
+  );
+
+  const goToNextSlide = useCallback(() => {
+    setActiveSlideIndex((prev) => (prev + 1) % slideCount);
+    setTimerResetKey((prev) => prev + 1);
+  }, [slideCount]);
+
+  const goToPrevSlide = useCallback(() => {
+    setActiveSlideIndex((prev) => (prev - 1 + slideCount) % slideCount);
+    setTimerResetKey((prev) => prev + 1);
+  }, [slideCount]);
+
+  // Continuous 3-second background slider rotation from slide 1 to the end
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setActiveSlideIndex((prev) => (prev + 1) % slideCount);
+    }, 3000);
+    return () => window.clearInterval(timer);
+  }, [slideCount, timerResetKey]);
 
   // Demo Request Form State
   const [fullName, setFullName] = useState('');
@@ -477,170 +516,174 @@ export const SolutionsPage: React.FC<SolutionsPageProps> = ({
   return (
     <div className="w-full bg-white text-[#121212]">
       {/* =====================================================================
-          1. HERO SECTION: Institutional Software Solutions
+          1. HERO SECTION: Full-Bleed Background Slider (Slide 1 to End)
       ===================================================================== */}
-      <section className="relative w-full bg-[#061539] text-white py-20 lg:py-28 overflow-hidden border-b border-[#1c3f9c]/30">
-        {/* Abstract subtle background grid and glow */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 opacity-20 pointer-events-none"
-          style={{
-            backgroundImage:
-              'radial-gradient(circle at 20% 30%, #1c3f9c 0%, transparent 45%), radial-gradient(circle at 80% 70%, #d91f26 0%, transparent 40%)',
-          }}
-        />
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 opacity-10 pointer-events-none"
-          style={{
-            backgroundImage:
-              'linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px)',
-            backgroundSize: '48px 48px',
-          }}
-        />
+      <section
+        aria-roledescription="carousel"
+        aria-label="Brainbench Technology Software Solutions Background Slider"
+        className="hero-fullscreen-stage flex items-center bg-[#061539] text-white select-none border-b border-[#1c3f9c]/30"
+      >
+        {/* Background Slides 1 to End (Full-bleed background images, not inside a frame) */}
+        {SOLUTIONS_DATA.map((solution, idx) => {
+          const isActive = idx === activeSlideIndex;
+          return (
+            <div
+              key={solution.id}
+              role="group"
+              aria-roledescription="slide"
+              aria-label={`Slide ${idx + 1} of ${slideCount}: ${solution.name}`}
+              aria-hidden={!isActive}
+              className={`absolute inset-0 w-full h-full flex items-center transition-opacity duration-600 ease-in-out ${
+                isActive
+                  ? 'z-20 opacity-100 pointer-events-auto'
+                  : 'z-10 opacity-0 pointer-events-none'
+              }`}
+            >
+              {/* 1. Full-Bleed Solution Background Image */}
+              <img
+                src={solution.imageUrl}
+                alt={solution.imageAlt}
+                loading="eager"
+                decoding="async"
+                className="hero-slide-image object-cover object-top"
+              />
 
-        <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-20 2xl:px-24 relative z-10">
-          <nav
-            aria-label="Breadcrumb"
-            className="flex items-center gap-2 text-xs font-montserrat font-semibold text-white/75 mb-6"
-          >
-            <Link to="/" className="hover:text-[#fdc12e] transition-colors">
-              Home
-            </Link>
-            <span>/</span>
-            <span className="text-[#fdc12e]">Solutions</span>
-          </nav>
+              {/* 2. Gradient Scrim for High-Contrast Typography & Background Visibility */}
+              <div
+                aria-hidden="true"
+                className="hero-slide-overlay"
+                style={{
+                  background:
+                    'linear-gradient(90deg, rgba(6, 21, 57, 0.90) 0%, rgba(6, 21, 57, 0.74) 42%, rgba(6, 21, 57, 0.34) 74%, rgba(6, 21, 57, 0.16) 100%), linear-gradient(180deg, rgba(6, 21, 57, 0.30) 0%, rgba(6, 21, 57, 0.08) 50%, rgba(6, 21, 57, 0.60) 100%)',
+                }}
+              />
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
-            <div className="lg:col-span-7">
-              <div className="inline-flex items-center gap-2.5 mb-5">
-                <span className="w-7 h-[2.5px] bg-[#f58220] rounded-full shrink-0" />
-                <span className="font-montserrat font-extrabold text-xs sm:text-[13px] tracking-[0.2em] uppercase text-[#fdc12e]">
-                  BRAINBENCH TECHNOLOGY SOFTWARE PRODUCTS
-                </span>
-              </div>
-
-              <h1 className="font-montserrat font-black text-3xl sm:text-5xl lg:text-[52px] leading-[1.08] tracking-tight text-white">
-                Institutional Software Solutions Built for Real-World Impact.
-              </h1>
-
-              <p className="font-merriweather text-base sm:text-lg text-white/90 leading-relaxed mt-6 max-w-2xl">
-                Modernise your school, college, or examination center with
-                Brainbench Technology’s battle-tested software suites. From
-                high-stakes computer-based testing with <strong>ULTRA CBT</strong>,
-                to digital campus administration with <strong>PORTAL PRO</strong>,
-                and comprehensive academic research with <strong>LMS E-LIBRARY</strong>,
-                we deliver reliable, secure, and locally supported digital tools.
-              </p>
-
-              <div className="mt-9 flex flex-wrap items-center gap-4">
-                <button
-                  type="button"
-                  onClick={() => handleScrollToDemo()}
-                  className="px-7 py-4 bg-[#f58220] hover:bg-[#fdc12e] text-[#121212] font-montserrat font-extrabold text-sm rounded-lg inline-flex items-center gap-2.5 shadow-md transition-all cursor-pointer"
+              {/* 3. Synchronised Left-Aligned Slide Content */}
+              <div className="hero-slide-content w-full pl-14 pr-14 sm:pl-20 sm:pr-20 md:pl-24 lg:pl-[10%] lg:pr-24 py-12 sm:py-16">
+                <nav
+                  aria-label="Breadcrumb"
+                  className="flex items-center gap-2 text-xs font-montserrat font-semibold text-white/80 mb-5"
                 >
-                  <span>Request a Demo</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
+                  <Link to="/" className="hover:text-[#fdc12e] transition-colors">
+                    Home
+                  </Link>
+                  <span>/</span>
+                  <span className="text-[#fdc12e]">Solutions</span>
+                  <span>/</span>
+                  <span className="text-white/90">{solution.name}</span>
+                </nav>
 
-                <a
-                  href="#products-overview"
-                  className="px-7 py-4 bg-white/10 hover:bg-white/20 text-white border border-white/30 font-montserrat font-bold text-sm rounded-lg inline-flex items-center gap-2 transition-colors cursor-pointer"
-                >
-                  <span>Explore Products</span>
-                  <Layers className="w-4 h-4" />
-                </a>
+                <div className="w-full max-w-[640px]">
+                  <div className="inline-flex items-center gap-2.5 mb-4">
+                    <span
+                      aria-hidden="true"
+                      className="w-7 h-[2.5px] bg-[#f58d00] rounded-full shrink-0"
+                    />
+                    <span className="font-montserrat font-extrabold text-xs sm:text-[13px] tracking-[0.2em] uppercase text-[#fdc12e] drop-shadow-[0_1px_6px_rgba(0,0,0,0.45)]">
+                      {solution.code} · {solution.badge}
+                    </span>
+                  </div>
 
-                <Link
-                  to="/courses"
-                  className="px-4 py-3 text-white/80 hover:text-white font-montserrat font-semibold text-xs sm:text-sm inline-flex items-center gap-2 hover:underline transition-colors"
-                >
-                  <span>Looking for student courses? View Course Catalogue</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
+                  <h1 className="font-montserrat font-black text-white text-[34px] sm:text-[46px] md:text-[54px] lg:text-[60px] leading-[1.08] tracking-[-0.025em] drop-shadow-[0_2px_16px_rgba(0,0,0,0.45)]">
+                    {solution.name}
+                  </h1>
+
+                  <p className="font-montserrat font-bold text-[#fdc12e] text-base sm:text-xl mt-2.5 drop-shadow-[0_1px_8px_rgba(0,0,0,0.45)]">
+                    {solution.tagline}
+                  </p>
+
+                  <p className="font-merriweather text-white/95 text-sm sm:text-base lg:text-[17px] leading-[1.65] mt-4 max-w-[580px] drop-shadow-[0_1px_10px_rgba(0,0,0,0.45)]">
+                    {solution.summary}
+                  </p>
+
+                  <div className="mt-8 sm:mt-9 flex flex-wrap items-center gap-3.5 sm:gap-4">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleScrollToDemo(solution.name as AllowedDemoProduct)
+                      }
+                      className="px-6 sm:px-7 py-3.5 sm:py-4 bg-[#f58d00] hover:bg-[#e07f00] text-[#061539] font-montserrat font-extrabold text-sm sm:text-[15px] rounded-[10px] shadow-[0_10px_24px_rgba(245,141,0,0.28)] inline-flex items-center gap-2.5 transition-all cursor-pointer whitespace-nowrap"
+                    >
+                      <span>Request {solution.name} Demo</span>
+                      <ArrowRight className="w-4 h-4 stroke-[2.4]" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleProductSelectAndScroll(solution.id)}
+                      className="px-6 sm:px-7 py-3.5 sm:py-4 bg-[#0a309e]/85 hover:bg-[#0a309e] text-white border-[1.75px] border-white/80 hover:border-white font-montserrat font-bold text-sm sm:text-[15px] rounded-[10px] backdrop-blur-xs inline-flex items-center gap-2.5 transition-all cursor-pointer whitespace-nowrap"
+                    >
+                      <span>{solution.ctaLabel}</span>
+                      <Layers className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
+          );
+        })}
 
-            {/* Right 5 Columns: Interactive Live Product Interface Showcase */}
-            <div className="lg:col-span-5">
-              <div className="rounded-2xl border border-white/15 bg-white/5 backdrop-blur-sm p-3 sm:p-4 shadow-2xl">
-                {/* Interactive Product Switcher Tabs */}
-                <div
-                  role="tablist"
-                  aria-label="Preview Brainbench software solutions"
-                  className="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-[#040f2a] border border-white/10 mb-3"
-                >
-                  {SOLUTIONS_DATA.map((item) => {
-                    const isSelected = activeHeroSolution.id === item.id;
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        role="tab"
-                        aria-selected={isSelected}
-                        onClick={() => setActiveSolutionId(item.id)}
-                        className={`px-2.5 py-2 rounded-lg font-montserrat font-extrabold text-[11px] transition-colors whitespace-nowrap truncate cursor-pointer ${
-                          isSelected
-                            ? 'bg-[#f58220] text-[#061539]'
-                            : 'text-white/75 hover:text-white hover:bg-white/10'
-                        }`}
-                      >
-                        {item.name}
-                      </button>
-                    );
-                  })}
-                </div>
+        {/* Side Circular Arrow Controls */}
+        <button
+          type="button"
+          onClick={goToPrevSlide}
+          aria-label="Previous solution slide"
+          className="absolute left-2.5 sm:left-5 lg:left-7 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#061539]/75 hover:bg-[#f58d00] text-white hover:text-[#061539] border border-white/35 hover:border-[#f58d00] backdrop-blur-xs shadow-lg flex items-center justify-center transition-all cursor-pointer"
+        >
+          <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.3]" />
+        </button>
 
-                {/* Product Screen Frame */}
-                <div
-                  onClick={() =>
-                    onOpenLightbox?.(
-                      activeHeroSolution.imageUrl,
-                      activeHeroSolution.imageCaption,
-                      `${activeHeroSolution.name} — Interface Preview`
-                    )
-                  }
-                  className={`group relative rounded-xl overflow-hidden bg-white border border-white/20 aspect-[16/11] flex items-center justify-center p-2 ${
-                    onOpenLightbox ? 'cursor-pointer' : ''
+        <button
+          type="button"
+          onClick={goToNextSlide}
+          aria-label="Next solution slide"
+          className="absolute right-2.5 sm:right-5 lg:right-7 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#061539]/75 hover:bg-[#f58d00] text-white hover:text-[#061539] border border-white/35 hover:border-[#f58d00] backdrop-blur-xs shadow-lg flex items-center justify-center transition-all cursor-pointer"
+        >
+          <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.3]" />
+        </button>
+
+        {/* Bottom Slide Selector Tabs (Slide 1 to End) */}
+        <div className="absolute bottom-4 sm:bottom-6 left-0 right-0 z-30 flex flex-col items-center justify-center gap-3 px-4 sm:px-6">
+          <div
+            role="tablist"
+            aria-label="Solutions hero slide selector tabs"
+            className="flex flex-wrap items-center justify-center gap-2 bg-[#061539]/85 backdrop-blur-md p-1.5 rounded-xl border border-white/25 shadow-lg"
+          >
+            {SOLUTIONS_DATA.map((solution, index) => {
+              const isActive = index === activeSlideIndex;
+              return (
+                <button
+                  key={solution.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  aria-label={`Go to slide ${index + 1}: ${solution.name}`}
+                  onClick={() => goToSlide(index)}
+                  className={`px-3.5 py-2 rounded-lg font-montserrat font-extrabold text-[11px] sm:text-xs tracking-wider uppercase transition-all duration-300 inline-flex items-center gap-2 cursor-pointer ${
+                    isActive
+                      ? 'bg-[#f58d00] text-[#061539] shadow-sm'
+                      : 'text-white/80 hover:text-white hover:bg-white/10'
                   }`}
                 >
-                  <ResilientImage
-                    src={activeHeroSolution.imageUrl}
-                    alt={activeHeroSolution.imageAlt}
-                    className="w-full h-full object-contain transition-transform duration-200 group-hover:scale-[1.015]"
-                  />
-                  {onOpenLightbox && (
-                    <span className="absolute bottom-2.5 right-2.5 px-2.5 py-1.5 rounded-lg bg-[#061539]/90 text-white font-montserrat font-bold text-[11px] inline-flex items-center gap-1.5 shadow-sm">
-                      <Maximize2 className="w-3.5 h-3.5 text-[#fdc12e]" />
-                      <span>Full View</span>
-                    </span>
-                  )}
-                </div>
-
-                {/* Caption & Deep-Dive Jump */}
-                <div className="mt-3 px-1 flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="font-montserrat font-extrabold text-xs text-[#fdc12e] truncate">
-                      {activeHeroSolution.name} · {activeHeroSolution.code}
-                    </div>
-                    <p className="font-merriweather text-[11px] text-white/80 truncate mt-0.5">
-                      {activeHeroSolution.tagline}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleProductSelectAndScroll(activeHeroSolution.id)
-                    }
-                    className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white font-montserrat font-bold text-[11px] inline-flex items-center gap-1 shrink-0 transition-colors cursor-pointer whitespace-nowrap"
-                  >
-                    <span>Details</span>
-                    <ArrowRight className="w-3 h-3 text-[#fdc12e]" />
-                  </button>
-                </div>
-              </div>
-            </div>
+                  <span className="font-mono-tabular opacity-80">
+                    0{index + 1}
+                  </span>
+                  <span>{solution.name}</span>
+                </button>
+              );
+            })}
           </div>
+        </div>
+
+        {/* Synchronised 3-Second Bottom Progress Bar */}
+        <div
+          aria-hidden="true"
+          className="absolute bottom-0 left-0 right-0 h-1 bg-[#061539]/25 z-30 overflow-hidden"
+        >
+          <div
+            key={`${activeHeroSolution.id}-${timerResetKey}`}
+            className="h-full w-full bg-[#f58d00] origin-left animate-[heroProgress_3000ms_linear]"
+          />
         </div>
       </section>
 
@@ -759,48 +802,50 @@ export const SolutionsPage: React.FC<SolutionsPageProps> = ({
                 <div
                   key={product.id}
                   onClick={() => handleProductSelectAndScroll(product.id)}
-                  className={`rounded-2xl border-2 transition-all p-7 bg-white cursor-pointer flex flex-col justify-between ${
+                  className={`rounded-2xl border-2 transition-all overflow-hidden bg-white cursor-pointer flex flex-col justify-between ${
                     isActive
                       ? 'border-[#1c3f9c] shadow-lg ring-2 ring-[#1c3f9c]/15 -translate-y-1'
                       : 'border-[#e3e5f0] hover:border-[#1c3f9c]/60 hover:shadow-md'
                   }`}
                 >
                   <div>
-                    {/* Product Interface Preview Thumbnail */}
-                    <div className="mb-5 rounded-xl border border-[#e3e5f0] bg-[#F8F9FC] p-2.5 aspect-[16/10] overflow-hidden flex items-center justify-center">
+                    {/* Frameless Edge-to-Edge Product Image */}
+                    <div className="w-full overflow-hidden aspect-[16/10]">
                       <ResilientImage
                         src={product.imageUrl}
                         alt={product.imageAlt}
-                        className="w-full h-full object-contain rounded-lg"
+                        className="w-full h-full object-cover object-top"
                       />
                     </div>
 
-                    <div className="flex items-center justify-between gap-2 mb-3 text-[11px] font-montserrat font-bold text-[#1c3f9c]">
-                      <span className="font-mono-tabular text-[#061539]">
-                        {product.code}
-                      </span>
-                      <span aria-hidden="true" className="text-[#cbd5e1]">
-                        /
-                      </span>
-                      <span className="text-[#454545] truncate">
-                        {product.badge}
-                      </span>
+                    <div className="p-7 pb-0">
+                      <div className="flex items-center justify-between gap-2 mb-3 text-[11px] font-montserrat font-bold text-[#1c3f9c]">
+                        <span className="font-mono-tabular text-[#061539]">
+                          {product.code}
+                        </span>
+                        <span aria-hidden="true" className="text-[#cbd5e1]">
+                          /
+                        </span>
+                        <span className="text-[#454545] truncate">
+                          {product.badge}
+                        </span>
+                      </div>
+
+                      <h3 className="font-montserrat font-black text-2xl text-[#121212]">
+                        {product.name}
+                      </h3>
+
+                      <p className="font-montserrat font-semibold text-xs text-[#1c3f9c] mt-1">
+                        {product.tagline}
+                      </p>
+
+                      <p className="font-merriweather text-xs sm:text-sm text-[#454545] mt-3 leading-relaxed">
+                        {product.summary}
+                      </p>
                     </div>
-
-                    <h3 className="font-montserrat font-black text-2xl text-[#121212]">
-                      {product.name}
-                    </h3>
-
-                    <p className="font-montserrat font-semibold text-xs text-[#1c3f9c] mt-1">
-                      {product.tagline}
-                    </p>
-
-                    <p className="font-merriweather text-xs sm:text-sm text-[#454545] mt-3 leading-relaxed">
-                      {product.summary}
-                    </p>
                   </div>
 
-                  <div className="mt-6 pt-5 border-t border-[#e3e5f0] flex flex-wrap items-center justify-between gap-3">
+                  <div className="px-7 pb-7 mt-6 pt-5 border-t border-[#e3e5f0] flex flex-wrap items-center justify-between gap-3">
                     <button
                       type="button"
                       onClick={(e) => {
@@ -909,7 +954,7 @@ export const SolutionsPage: React.FC<SolutionsPageProps> = ({
 
             {/* Right 5 Columns: Product Interface Preview + Specification & Architecture Card */}
             <div className="lg:col-span-5 space-y-6">
-              {/* Official ULTRA CBT Product Interface Preview */}
+              {/* Official ULTRA CBT Product Image (Frameless) */}
               <div
                 onClick={() =>
                   onOpenLightbox?.(
@@ -918,28 +963,15 @@ export const SolutionsPage: React.FC<SolutionsPageProps> = ({
                     'ULTRA CBT — Product Interface'
                   )
                 }
-                className={`group rounded-2xl border-2 border-[#1c3f9c]/25 bg-[#F8F9FC] p-3 shadow-sm overflow-hidden transition-all hover:border-[#1c3f9c] ${
+                className={`group relative rounded-2xl overflow-hidden shadow-md ${
                   onOpenLightbox ? 'cursor-pointer' : ''
                 }`}
               >
-                <div className="rounded-xl overflow-hidden bg-white border border-[#e3e5f0]">
-                  <ResilientImage
-                    src={SOLUTIONS_DATA[0].imageUrl}
-                    alt={SOLUTIONS_DATA[0].imageAlt}
-                    className="w-full h-auto object-contain block transition-transform duration-200 group-hover:scale-[1.01]"
-                  />
-                </div>
-                <div className="mt-3 px-1.5 flex items-center justify-between gap-3 text-[11px] font-montserrat">
-                  <span className="font-bold text-[#061539] truncate">
-                    ULTRA CBT · Candidate Exam Dashboard
-                  </span>
-                  {onOpenLightbox && (
-                    <span className="inline-flex items-center gap-1 font-extrabold text-[#1c3f9c] shrink-0 whitespace-nowrap">
-                      <Maximize2 className="w-3.5 h-3.5" />
-                      <span>Enlarge</span>
-                    </span>
-                  )}
-                </div>
+                <ResilientImage
+                  src={SOLUTIONS_DATA[0].imageUrl}
+                  alt={SOLUTIONS_DATA[0].imageAlt}
+                  className="w-full h-auto object-cover block transition-transform duration-200 group-hover:scale-[1.01]"
+                />
               </div>
 
               <div className="bg-[#061539] text-white rounded-2xl p-7 sm:p-8 shadow-xl border border-[#1c3f9c]/40">
@@ -1040,7 +1072,7 @@ export const SolutionsPage: React.FC<SolutionsPageProps> = ({
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
             {/* Left 5 Columns: Product Interface Preview + System Architecture & Modules */}
             <div className="lg:col-span-5 order-2 lg:order-1 space-y-6">
-              {/* Official PORTAL PRO Product Interface Preview */}
+              {/* Official PORTAL PRO Product Image (Frameless) */}
               <div
                 onClick={() =>
                   onOpenLightbox?.(
@@ -1049,28 +1081,15 @@ export const SolutionsPage: React.FC<SolutionsPageProps> = ({
                     'PORTAL PRO — Product Interface'
                   )
                 }
-                className={`group rounded-2xl border-2 border-[#092279]/25 bg-white p-3 shadow-sm overflow-hidden transition-all hover:border-[#092279] ${
+                className={`group relative rounded-2xl overflow-hidden shadow-md ${
                   onOpenLightbox ? 'cursor-pointer' : ''
                 }`}
               >
-                <div className="rounded-xl overflow-hidden bg-[#F8F9FC] border border-[#e3e5f0]">
-                  <ResilientImage
-                    src={SOLUTIONS_DATA[1].imageUrl}
-                    alt={SOLUTIONS_DATA[1].imageAlt}
-                    className="w-full h-auto object-contain block transition-transform duration-200 group-hover:scale-[1.01]"
-                  />
-                </div>
-                <div className="mt-3 px-1.5 flex items-center justify-between gap-3 text-[11px] font-montserrat">
-                  <span className="font-bold text-[#092279] truncate">
-                    PORTAL PRO · Student &amp; Campus Access Portal
-                  </span>
-                  {onOpenLightbox && (
-                    <span className="inline-flex items-center gap-1 font-extrabold text-[#f58220] shrink-0 whitespace-nowrap">
-                      <Maximize2 className="w-3.5 h-3.5" />
-                      <span>Enlarge</span>
-                    </span>
-                  )}
-                </div>
+                <ResilientImage
+                  src={SOLUTIONS_DATA[1].imageUrl}
+                  alt={SOLUTIONS_DATA[1].imageAlt}
+                  className="w-full h-auto object-cover block transition-transform duration-200 group-hover:scale-[1.01]"
+                />
               </div>
 
               <div className="bg-[#092279] text-white rounded-2xl p-7 sm:p-8 shadow-xl border border-[#092279]/40">
@@ -1317,7 +1336,7 @@ export const SolutionsPage: React.FC<SolutionsPageProps> = ({
 
             {/* Right 5 Columns: Product Interface Preview + Specification & Architecture Card */}
             <div className="lg:col-span-5 space-y-6">
-              {/* Official LMS E-LIBRARY Product Interface Preview */}
+              {/* Official LMS E-LIBRARY Product Interface Preview (Frameless) */}
               <div
                 onClick={() =>
                   onOpenLightbox?.(
@@ -1326,28 +1345,15 @@ export const SolutionsPage: React.FC<SolutionsPageProps> = ({
                     'LMS E-LIBRARY — Product Interface'
                   )
                 }
-                className={`group rounded-2xl border-2 border-[#059669]/25 bg-[#F8F9FC] p-3 shadow-sm overflow-hidden transition-all hover:border-[#059669] ${
+                className={`group overflow-hidden rounded-xl ${
                   onOpenLightbox ? 'cursor-pointer' : ''
                 }`}
               >
-                <div className="rounded-xl overflow-hidden bg-white border border-[#e3e5f0]">
-                  <ResilientImage
-                    src={SOLUTIONS_DATA[2].imageUrl}
-                    alt={SOLUTIONS_DATA[2].imageAlt}
-                    className="w-full h-auto object-contain block transition-transform duration-200 group-hover:scale-[1.01]"
-                  />
-                </div>
-                <div className="mt-3 px-1.5 flex items-center justify-between gap-3 text-[11px] font-montserrat">
-                  <span className="font-bold text-[#042f2e] truncate">
-                    LMS E-LIBRARY · Student Learning &amp; Resource Hub
-                  </span>
-                  {onOpenLightbox && (
-                    <span className="inline-flex items-center gap-1 font-extrabold text-[#059669] shrink-0 whitespace-nowrap">
-                      <Maximize2 className="w-3.5 h-3.5" />
-                      <span>Enlarge</span>
-                    </span>
-                  )}
-                </div>
+                <ResilientImage
+                  src={SOLUTIONS_DATA[2].imageUrl}
+                  alt={SOLUTIONS_DATA[2].imageAlt}
+                  className="w-full h-auto object-cover block transition-transform duration-300 group-hover:scale-[1.02]"
+                />
               </div>
 
               <div className="bg-[#042f2e] text-white rounded-2xl p-7 sm:p-8 shadow-xl border border-[#059669]/40">
